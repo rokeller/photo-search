@@ -15,6 +15,6 @@ set -e
 source $VENV_DIR/bin/activate
 set +e
 
-python3 -m pip install -U sentence-transformers bottle
+python3 -m pip install -U sentence-transformers bottle Pillow
 
 echo 'Environment set up. Run `deactivate` to deactivate.'

@@ -4,7 +4,7 @@ import sys
 import requests
 from shutil import copyfile, move
 from sentence_transformers import SentenceTransformer
-from PIL import Image
+from PIL import Image, ExifTags, TiffImagePlugin
 import numpy as np
 
 args = sys.argv[1:]
@@ -22,8 +22,6 @@ ENCODE_BATCH_SIZE = 128
 
 CHECKPOINT_PATH = '.checkpoint'
 CHECKPOINT_TEMP_PATH = '.checkpoint.temp'
-
-print(f"Looking for photos to index in {root_dir} ...")
 
 def get_photos():
     '''
@@ -66,27 +64,44 @@ def get_checkpoint_paths():
 
     return file_names
 
+def extract_exif(img:Image):
+    '''
+    Extracts EXIF tags found in the image.
+    '''
+    exif = img.getexif()
+    tags = { ExifTags.TAGS[k]: v for k, v in exif.items() if k in ExifTags.TAGS }
+    for k, v in tags.items():
+        if type(v) is TiffImagePlugin.IFDRational:
+            tags[k] = float(v)
+        elif type(v) is bytes:
+            tags[k] = v.hex()
+    return tags
+
 def calculate_embeddings(file_paths):
     '''
     Calculates the embeddings for the photos in the given relative file paths.
     '''
+    full_paths = [os.path.join(root_dir, file_path) for file_path in file_paths]
+    images = [Image.open(file_path) for file_path in full_paths]
+    tags = [extract_exif(img) for img in images]
     embeddings = model.encode(
-        [Image.open(os.path.join(root_dir, file_path)) for file_path in file_paths],
+        images,
         batch_size=ENCODE_BATCH_SIZE,
         convert_to_tensor=True,
         show_progress_bar=False)
-    return zip(file_paths, embeddings)
+    return zip(file_paths, tags, embeddings)
 
 def upload_embeddings(embeddings):
     '''
     Uploads embeddings for relative file paths to the indexing server.
     '''
     url = target_base_url.strip('/') + '/v1/index'
-    for (path, vector) in embeddings:
+    for (path, tags, vector) in embeddings:
         body = {
             'items': [
                 {
                     'path': path,
+                    'exif': tags,
                     'v': vector.tolist(),
                 }
             ]
@@ -100,6 +115,7 @@ def upload_embeddings(embeddings):
 # Figure out which photos to index. That is the set of photos that exist, minus
 # the set of photos that are already indexed (i.e. the photos from the checkpoint
 # file).
+print(f"Looking for photos to index in {root_dir} ...")
 all_photos_paths = get_photos()
 checkpoint_paths = get_checkpoint_paths()
 size_all = len(all_photos_paths)
