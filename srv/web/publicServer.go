@@ -95,10 +95,11 @@ func (c publicServerContext) handleV1PhotosGetById(w http.ResponseWriter, r *htt
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	relPath, err := c.getPathById(id)
+	payload, err := c.getPayloadById(id)
 	if nil != err {
 		w.WriteHeader(500)
 	} else {
+		relPath := getPathFromPayload(payload)
 		absPath := path.Join(c.photosRootDir, *relPath)
 		w.Header().Add("cache-control", "max-age=31556736")
 		http.ServeFile(w, r, absPath)
@@ -115,12 +116,13 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 		w.WriteHeader(400)
 	}
 
-	relPath, err := c.getPathById(id)
+	payload, err := c.getPayloadById(id)
 	if nil != err {
 		w.WriteHeader(500)
 		return
 	}
 
+	relPath := getPathFromPayload(payload)
 	absPath := path.Join(c.photosRootDir, *relPath)
 	image, err := resizeImage(absPath, width)
 	if nil != err {
@@ -128,16 +130,22 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 		return
 	}
 
+	orientation := getOrientationFromPayload(payload)
+	if nil != orientation {
+		// Apply the reverse transformation of the orientation in the EXIF tags
+		// to put the photo into the right shape again.
+		image = realignImage(image, *orientation)
+	} else {
+		glog.V(1).Infof("Missing 'Orientation' tag in '%s'.", *relPath)
+	}
+
 	w.Header().Add("cache-control", "max-age=31556736")
 	w.Header().Add("content-type", "image/jpeg")
 
-	jpeg.Encode(w, image, &jpeg.Options{Quality: 80})
+	jpeg.Encode(w, image, &jpeg.Options{Quality: 66})
 }
 
 func resizeImage(path string, newWidth int) (image.Image, error) {
-	// TODO: thanks to the incompetence of the golang team, this ignores image
-	//       rotation metadata which implies that resized images are created
-	//       with the default rotation instead of the rotation of the original.
 	image, err := imaging.Open(path)
 	if err != nil {
 		glog.Errorf("Failed to open photo file '%s': %v", path, err)
@@ -147,4 +155,36 @@ func resizeImage(path string, newWidth int) (image.Image, error) {
 	resized := imaging.Resize(image, newWidth, 0, imaging.Lanczos)
 
 	return resized, nil
+}
+
+func realignImage(img image.Image, orientation int64) image.Image {
+	// See https://exiftool.org/TagNames/EXIF.html
+	switch orientation {
+	case 1: // Normal, do nothing
+		return img
+
+	case 2: // Mirror horizontal
+		return imaging.FlipH(img)
+
+	case 3: // Rotate 180
+		return imaging.Rotate180(img)
+
+	case 4: // Mirror vertical
+		return imaging.FlipV(img)
+
+	case 5: // Mirror horizontal and rotate 270 degrees clockwise
+		return imaging.FlipH(imaging.Rotate90(img))
+
+	case 6: // Rotate 90 degrees clockwise
+		return imaging.Rotate270(img) // _counter_-clockwise
+
+	case 7: // Mirror horizontal and rotate 90 degrees clockwise
+		return imaging.FlipH(imaging.Rotate270(img))
+
+	case 8: // Rotate 270 degrees clockwise
+		return imaging.Rotate90(img) // _counter_-clockwise
+
+	default:
+		return img
+	}
 }

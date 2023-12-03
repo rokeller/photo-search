@@ -22,6 +22,9 @@ import (
 
 const (
 	METADATA_PATH = "path"
+	METADATA_EXIF = "exif"
+
+	EXIF_ORIENTATION = "Orientation"
 )
 
 type serverContext struct {
@@ -111,7 +114,15 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 			Payload: map[string]*pb.Value{
 				METADATA_PATH: {
 					Kind: &pb.Value_StringValue{StringValue: item.Path},
-				}},
+				},
+				METADATA_EXIF: {
+					Kind: &pb.Value_StructValue{
+						StructValue: &pb.Struct{
+							Fields: exifTagsToPayloadFields(item.Exif),
+						},
+					},
+				},
+			},
 			Vectors: &pb.Vectors{
 				VectorsOptions: &pb.Vectors_Vector{
 					Vector: &pb.Vector{
@@ -206,7 +217,7 @@ func (c *serverContext) recommend(
 	return makePhotoResultsResponse(r.Result), nil
 }
 
-func (c *serverContext) getPathById(id string) (*string, error) {
+func (c *serverContext) getPayloadById(id string) (map[string]*pb.Value, error) {
 	client := pb.NewPointsClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -227,8 +238,7 @@ func (c *serverContext) getPathById(id string) (*string, error) {
 		return nil, err
 	}
 
-	path := r.Result[0].Payload[METADATA_PATH].GetStringValue()
-	return &path, nil
+	return r.Result[0].Payload, nil
 }
 
 func (c *serverContext) getEmbedding(query string) ([]float32, error) {
@@ -287,4 +297,72 @@ func makePhotoResultsResponse(scoredItems []*pb.ScoredPoint) *models.PhotoResult
 	}
 
 	return result
+}
+
+func exifTagsToPayloadFields(tags map[string]any) map[string]*pb.Value {
+	result := make(map[string]*pb.Value)
+	for k, v := range tags {
+		switch val := v.(type) {
+		case bool:
+			result[k] = &pb.Value{Kind: &pb.Value_BoolValue{BoolValue: val}}
+		case json.Number:
+			if strings.Index(string(val), ".") >= 0 {
+				// float64
+				f, err := val.Float64()
+				if nil == err {
+					result[k] = &pb.Value{Kind: &pb.Value_DoubleValue{DoubleValue: f}}
+				}
+			} else {
+				// int64
+				i, err := val.Int64()
+				if nil == err {
+					result[k] = &pb.Value{Kind: &pb.Value_IntegerValue{IntegerValue: i}}
+				}
+			}
+		case string:
+			result[k] = &pb.Value{Kind: &pb.Value_StringValue{StringValue: val}}
+		case nil:
+			result[k] = &pb.Value{Kind: &pb.Value_NullValue{NullValue: pb.NullValue_NULL_VALUE}}
+
+		default:
+			glog.V(1).Infof("Unsupported tag value type for EXIF tag '%s': %v", k, v)
+		}
+	}
+
+	return result
+}
+
+func getPathFromPayload(payload map[string]*pb.Value) *string {
+	path := payload[METADATA_PATH].GetStringValue()
+	return &path
+}
+
+func getOrientationFromPayload(payload map[string]*pb.Value) *int64 {
+	field := getExifFieldFromPayload(payload, EXIF_ORIENTATION)
+	if nil == field {
+		return nil
+	}
+
+	switch f := field.Kind.(type) {
+	case *pb.Value_DoubleValue:
+		intVal := int64(f.DoubleValue)
+		return &intVal
+
+	case *pb.Value_IntegerValue:
+		return &f.IntegerValue
+	}
+
+	glog.Warning("Tag 'Orientation' is neither float64 nor int64.")
+
+	return nil
+}
+
+func getExifFieldFromPayload(payload map[string]*pb.Value, fieldName string) *pb.Value {
+	exif := payload[METADATA_EXIF].GetStructValue()
+	field, found := exif.Fields[fieldName]
+	if !found {
+		return nil
+	}
+
+	return field
 }

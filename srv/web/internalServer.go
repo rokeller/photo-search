@@ -38,7 +38,9 @@ func (c internalServerContext) addV1API(mux *mux.Router) {
 
 func (c internalServerContext) handleV1PostIndex(w http.ResponseWriter, r *http.Request) {
 	req := &models.IndexRequest{}
-	json.NewDecoder(r.Body).Decode(req)
+	decoder := json.NewDecoder(r.Body)
+	decoder.UseNumber()
+	decoder.Decode(req)
 
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
