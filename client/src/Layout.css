@@ -1,0 +1,32 @@
+.header {
+    z-index: 1;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 60px;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.header .logo {
+    max-height: 52px;
+}
+
+.content-container {
+    z-index: 10;
+    margin: 76px 0 32px 0;
+}
+
+.footer {
+    z-index: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 24px;
+    padding: 16px 16px 8px 16px;
+    display: flex;
+    justify-content: center;
+}
