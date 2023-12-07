@@ -146,7 +146,7 @@ def upload_embeddings(payloads_and_embeddings):
         }
         response = requests.post(url, json=body)
         if response.status_code != 200:
-            print(f'Index error: got status {response.status_code} for file "{payload.path}"')
+            print(f'Index error: got status {response.status_code} for file "{payload["path"]}"')
             return False
     return True
 
