@@ -5,7 +5,12 @@ type IndexRequest struct {
 }
 
 type ItemToIndex struct {
-	Path   string         `json:"path"`
-	Exif   map[string]any `json:"exif"`
-	Vector []float32      `json:"v"`
+	Payload ItemPayload `json:"p"`
+	Vector  []float32   `json:"v"`
+}
+
+type ItemPayload struct {
+	Path      string         `json:"path"`
+	Timestamp *int64         `json:"timestamp"`
+	Exif      map[string]any `json:"exif"`
 }

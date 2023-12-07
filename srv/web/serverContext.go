@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	METADATA_PATH = "path"
-	METADATA_EXIF = "exif"
+	METADATA_PATH      = "path"
+	METADATA_TIMESTAMP = "timestamp"
+	METADATA_EXIF      = "exif"
 
 	EXIF_ORIENTATION = "Orientation"
 )
@@ -105,24 +106,34 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 	points := make([]*pb.PointStruct, len(items))
 
 	for i, item := range items {
-		points[i] = &pb.PointStruct{
-			Id: &pb.PointId{
-				PointIdOptions: &pb.PointId_Uuid{
-					Uuid: pathHash(item.Path),
-				},
+		payload := map[string]*pb.Value{
+			METADATA_PATH: {
+				Kind: &pb.Value_StringValue{StringValue: item.Payload.Path},
 			},
-			Payload: map[string]*pb.Value{
-				METADATA_PATH: {
-					Kind: &pb.Value_StringValue{StringValue: item.Path},
-				},
-				METADATA_EXIF: {
-					Kind: &pb.Value_StructValue{
-						StructValue: &pb.Struct{
-							Fields: exifTagsToPayloadFields(item.Exif),
-						},
+			METADATA_EXIF: {
+				Kind: &pb.Value_StructValue{
+					StructValue: &pb.Struct{
+						Fields: exifTagsToPayloadFields(item.Payload.Exif),
 					},
 				},
 			},
+		}
+
+		if nil != item.Payload.Timestamp {
+			payload[METADATA_TIMESTAMP] = &pb.Value{
+				Kind: &pb.Value_IntegerValue{IntegerValue: *item.Payload.Timestamp},
+			}
+		} else {
+			glog.Warningf("Image at path '%s' has no timestamp.", item.Payload.Path)
+		}
+
+		points[i] = &pb.PointStruct{
+			Id: &pb.PointId{
+				PointIdOptions: &pb.PointId_Uuid{
+					Uuid: pathHash(item.Payload.Path),
+				},
+			},
+			Payload: payload,
 			Vectors: &pb.Vectors{
 				VectorsOptions: &pb.Vectors_Vector{
 					Vector: &pb.Vector{

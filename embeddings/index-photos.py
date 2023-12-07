@@ -1,7 +1,10 @@
+from datetime import datetime
+from calendar import timegm
 import glob
 import os
-import sys
+import re
 import requests
+import sys
 from shutil import copyfile, move
 from sentence_transformers import SentenceTransformer
 from PIL import Image, ExifTags, TiffImagePlugin
@@ -64,7 +67,16 @@ def get_checkpoint_paths():
 
     return file_names
 
-def extract_exif(img:Image):
+def parse_exif_timestamp(timestampStr: str):
+    match = re.match(r'^(\d{4}).(\d{2}).(\d{2})\s+(\d{2}:\d{2}:\d{2})$', timestampStr)
+    if match == None:
+        return None
+
+    isoStr = f'{match.group(1)}-{match.group(2)}-{match.group(3)} {match.group(4)}'
+    dt = datetime.fromisoformat(isoStr)
+    return timegm(dt.timetuple())
+
+def extract_exif(img: Image):
     '''
     Extracts EXIF tags found in the image.
     '''
@@ -72,10 +84,34 @@ def extract_exif(img:Image):
     tags = { ExifTags.TAGS[k]: v for k, v in exif.items() if k in ExifTags.TAGS }
     for k, v in tags.items():
         if type(v) is TiffImagePlugin.IFDRational:
-            tags[k] = float(v)
+            if v.denominator == 0:
+                tags[k] = None
+            else:
+                tags[k] = float(v)
         elif type(v) is bytes:
             tags[k] = v.hex()
     return tags
+
+def extract_timestamp(path: str, exif_tags: dict[str, any]):
+    if 'DateTime' in exif_tags:
+        dt = parse_exif_timestamp(exif_tags['DateTime'])
+        if dt != None:
+            return dt
+
+    match = re.search('(?P<year>[12]\d{3})[\-._:]?(?P<month>[01]\d)[\-._:]?(?P<day>[0-3]\d)' +
+                      '[\-._ ]+(?P<time>(?P<hour>[012]\d)[\-._:]?(?P<minute>[0-5]\d)[\-._:]?(?P<second>[0-5]\d))?',
+                     path)
+    if match == None:
+        return None
+
+    isoStr = f'{match.group("year")}-{match.group("month")}-{match.group("day")}'
+    if None == match.group('time'):
+        isoStr += ' 00:00:00'
+    else:
+        isoStr += f' {match.group("hour")}:{match.group("minute")}:{match.group("second")}'
+
+    dt = datetime.fromisoformat(isoStr)
+    return timegm(dt.timetuple())
 
 def calculate_embeddings(file_paths):
     '''
@@ -83,32 +119,34 @@ def calculate_embeddings(file_paths):
     '''
     full_paths = [os.path.join(root_dir, file_path) for file_path in file_paths]
     images = [Image.open(file_path) for file_path in full_paths]
-    tags = [extract_exif(img) for img in images]
+    exif_tags = [extract_exif(img) for img in images]
+    timestamps = [extract_timestamp(path, tags) for (path, tags) in zip(file_paths, exif_tags)]
+    payloads = [{'path':path, 'exif': tags, 'timestamp': timestamp}
+                for (path, tags, timestamp) in zip(file_paths, exif_tags, timestamps)]
     embeddings = model.encode(
         images,
         batch_size=ENCODE_BATCH_SIZE,
         convert_to_tensor=True,
         show_progress_bar=False)
-    return zip(file_paths, tags, embeddings)
+    return zip(payloads, embeddings)
 
-def upload_embeddings(embeddings):
+def upload_embeddings(payloads_and_embeddings):
     '''
     Uploads embeddings for relative file paths to the indexing server.
     '''
     url = target_base_url.strip('/') + '/v1/index'
-    for (path, tags, vector) in embeddings:
+    for (payload, vector) in payloads_and_embeddings:
         body = {
             'items': [
                 {
-                    'path': path,
-                    'exif': tags,
+                    'p': payload,
                     'v': vector.tolist(),
                 }
             ]
         }
         response = requests.post(url, json=body)
         if response.status_code != 200:
-            print(f'Index error: got status {response.status_code} for file "{path}"')
+            print(f'Index error: got status {response.status_code} for file "{payload.path}"')
             return False
     return True
 
@@ -141,8 +179,8 @@ model = SentenceTransformer('.models/clip-ViT-B-32')
 
 for i in range(0,len(chunks)):
     print(f'Calculating embeddings for chunk {i + 1}/{num_chunks} ({(i / num_chunks * 100):.2f}% done)...')
-    embeddings = calculate_embeddings(chunks[i])
-    if upload_embeddings(embeddings):
+    payloads_and_embeddings = calculate_embeddings(chunks[i])
+    if upload_embeddings(payloads_and_embeddings):
         # Write to the checkpoint file so we know not to do the same photos again.
         checkpoint(np.asarray(chunks[i]))
     else:
