@@ -1,3 +1,42 @@
+.photos * {
+    box-sizing: border-box;
+}
+
+.photos>.view {
+    z-index: 100;
+    background-color: black;
+    opacity: 1;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 20px;
+}
+
+.view.view-off {
+    display: none;
+}
+
+.view.view-on .close-btn {
+    cursor: pointer;
+    position: static;
+    padding: 0 20px;
+    top: 0;
+    right: 0;
+}
+
+.view.view-on {
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.view.view-on img {
+    opacity: 1;
+    max-width: 100%;
+}
+
 .photos .item img {
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
@@ -11,4 +50,19 @@
     border-bottom-right-radius: 8px;
     padding: 2px 8px;
     background-color: black;
+    display: flex;
+    column-gap: 4px;
+}
+
+.legend .index,
+.legend .view {
+    font-size: 200%;
+}
+
+.legend .view {
+    cursor: pointer;
+}
+
+.legend .metadata {
+    flex-grow: 1;
 }

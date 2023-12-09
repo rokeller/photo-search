@@ -11,7 +11,7 @@ export default defineConfig(({ command }) => {
         mergeConfig.server = {
             host: true,
             proxy: {
-                '/v1': 'http://localhost:8080/',
+                '/api': 'http://localhost:8080/',
             }
         };
     }

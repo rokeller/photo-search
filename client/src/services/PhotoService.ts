@@ -17,12 +17,14 @@ export interface PhotoResultsResponse {
 export interface PhotoResultItem {
     id: string;
     path?: string;
+    timestamp?: number;
+    cam?: string;
     score?: number;
 }
 
 class PhotoServiceImpl {
     public async search({ query, limit, offset }: QueryPhotosRequest) {
-        const resp = await fetch('/v1/photos/search', {
+        const resp = await fetch('/api/v1/photos/search', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
@@ -36,7 +38,7 @@ class PhotoServiceImpl {
     }
 
     public async recommend({ id, limit, offset }: RecommendSimilarPhotosRequest) {
-        const resp = await fetch('/v1/photos/recommend', {
+        const resp = await fetch('/api/v1/photos/recommend', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
@@ -49,8 +51,13 @@ class PhotoServiceImpl {
         return result;
     }
 
-    public getPhotoSrc(id: string) {
-        return '/v1/photos/' + encodeURIComponent(id) + '/512';
+    public getPhotoSrc(id: string, width?: number) {
+        let url = '/api/v1/photos/' + encodeURIComponent(id);
+        if (width !== undefined) {
+            url += '/' + encodeURIComponent(width);
+        }
+
+        return url;
     }
 }
 

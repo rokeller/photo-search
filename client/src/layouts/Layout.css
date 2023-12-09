@@ -3,29 +3,30 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    right: 0;
     height: 60px;
     padding: 8px 16px;
     display: flex;
     justify-content: center;
 }
 
-.header .logo {
+.logo {
     max-height: 52px;
+    margin-right: 24px;
 }
 
-.content-container {
-    z-index: 10;
-    margin: 76px 0 32px 0;
+.photos-container {
+    margin: 76px 0 0 0;
+    padding: 0 8px;
 }
 
 .footer {
     z-index: 0;
+    box-sizing: border-box;
     position: fixed;
-    bottom: 0;
     left: 0;
-    width: 100vw;
-    height: 24px;
+    right: 0;
+    bottom: 0;
     padding: 16px 16px 8px 16px;
     display: flex;
     justify-content: center;
