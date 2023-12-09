@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -25,7 +27,9 @@ const (
 	METADATA_TIMESTAMP = "timestamp"
 	METADATA_EXIF      = "exif"
 
-	EXIF_ORIENTATION = "Orientation"
+	EXIF_CAMERA_MAKE  = "Make"
+	EXIF_CAMERA_Model = "Model"
+	EXIF_ORIENTATION  = "Orientation"
 )
 
 type serverContext struct {
@@ -297,9 +301,11 @@ func makePhotoResultsResponse(scoredItems []*pb.ScoredPoint) *models.PhotoResult
 	items := make([]*models.PhotoResultItem, len(scoredItems))
 	for i, r := range scoredItems {
 		items[i] = &models.PhotoResultItem{
-			Id:    r.Id.GetUuid(),
-			Score: r.Score,
-			Path:  r.Payload[METADATA_PATH].GetStringValue(),
+			Id:        r.Id.GetUuid(),
+			Score:     r.Score,
+			Path:      *getPathFromPayload(r.Payload),
+			Timestamp: getTimestampFromPayload(r.Payload),
+			Camera:    getCameraFromPayload(r.Payload),
 		}
 	}
 
@@ -313,39 +319,96 @@ func makePhotoResultsResponse(scoredItems []*pb.ScoredPoint) *models.PhotoResult
 func exifTagsToPayloadFields(tags map[string]any) map[string]*pb.Value {
 	result := make(map[string]*pb.Value)
 	for k, v := range tags {
-		switch val := v.(type) {
-		case bool:
-			result[k] = &pb.Value{Kind: &pb.Value_BoolValue{BoolValue: val}}
-		case json.Number:
-			if strings.Index(string(val), ".") >= 0 {
-				// float64
-				f, err := val.Float64()
-				if nil == err {
-					result[k] = &pb.Value{Kind: &pb.Value_DoubleValue{DoubleValue: f}}
-				}
-			} else {
-				// int64
-				i, err := val.Int64()
-				if nil == err {
-					result[k] = &pb.Value{Kind: &pb.Value_IntegerValue{IntegerValue: i}}
-				}
-			}
-		case string:
-			result[k] = &pb.Value{Kind: &pb.Value_StringValue{StringValue: val}}
-		case nil:
-			result[k] = &pb.Value{Kind: &pb.Value_NullValue{NullValue: pb.NullValue_NULL_VALUE}}
-
-		default:
-			glog.V(1).Infof("Unsupported tag value type for EXIF tag '%s': %v", k, v)
+		val, err := exifTagValueToFieldValue(v)
+		if nil != err {
+			glog.Errorf("Failed to convert value '%v' to qdrant field value: %v", v, err)
 		}
+		result[k] = val
 	}
 
 	return result
 }
 
+func exifTagValueToFieldValue(v any) (*pb.Value, error) {
+	switch val := v.(type) {
+	case bool:
+		return &pb.Value{Kind: &pb.Value_BoolValue{BoolValue: val}}, nil
+
+	case json.Number:
+		if strings.Index(string(val), ".") >= 0 {
+			// float64
+			f, err := val.Float64()
+			if nil == err {
+				return &pb.Value{Kind: &pb.Value_DoubleValue{DoubleValue: f}}, nil
+			}
+			return nil, err
+		} else {
+			// int64
+			i, err := val.Int64()
+			if nil == err {
+				return &pb.Value{Kind: &pb.Value_IntegerValue{IntegerValue: i}}, nil
+			}
+			return nil, err
+		}
+
+	case string:
+		return &pb.Value{Kind: &pb.Value_StringValue{StringValue: val}}, nil
+
+	case []any:
+		values := make([]*pb.Value, len(val))
+		for i, value := range val {
+			tmp, err := exifTagValueToFieldValue(value)
+			if nil != err {
+				return nil, err
+			}
+			values[i] = tmp
+		}
+		return &pb.Value{Kind: &pb.Value_ListValue{}}, nil
+
+	case nil:
+		return &pb.Value{Kind: &pb.Value_NullValue{NullValue: pb.NullValue_NULL_VALUE}}, nil
+
+	default:
+		glog.V(1).Infof("Unsupported tag value type: %v", v)
+		return nil, errors.New("unsupported tag value type")
+	}
+}
+
 func getPathFromPayload(payload map[string]*pb.Value) *string {
 	path := payload[METADATA_PATH].GetStringValue()
 	return &path
+}
+
+func getTimestampFromPayload(payload map[string]*pb.Value) *int64 {
+	timestamp, found := payload[METADATA_TIMESTAMP]
+	if !found {
+		return nil
+	}
+
+	val := timestamp.GetIntegerValue()
+	return &val
+}
+
+func getCameraFromPayload(payload map[string]*pb.Value) *string {
+	makeVal := getExifFieldFromPayload(payload, EXIF_CAMERA_MAKE)
+	modelVal := getExifFieldFromPayload(payload, EXIF_CAMERA_Model)
+
+	if nil == makeVal && nil == modelVal {
+		return nil
+	}
+
+	var result string
+	if nil != makeVal {
+		result = makeVal.GetStringValue()
+
+		if nil != modelVal {
+			result += fmt.Sprintf(" (%s)", modelVal.GetStringValue())
+		}
+	} else {
+		result = modelVal.GetStringValue()
+	}
+
+	return &result
 }
 
 func getOrientationFromPayload(payload map[string]*pb.Value) *int64 {

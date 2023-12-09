@@ -17,9 +17,11 @@ type RecommendPhotosRequest struct {
 }
 
 type PhotoResultItem struct {
-	Id    string  `json:"id"`
-	Path  string  `json:"path"`
-	Score float32 `json:"score"`
+	Id        string  `json:"id"`
+	Path      string  `json:"path"`
+	Timestamp *int64  `json:"timestamp"`
+	Camera    *string `json:"cam"`
+	Score     float32 `json:"score"`
 }
 
 type EmbeddingResponse struct {

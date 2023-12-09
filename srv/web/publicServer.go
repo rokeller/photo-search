@@ -28,7 +28,7 @@ func NewPublicServer(ctx *serverContext) *http.Server {
 	publicCtx := publicServerContext{
 		serverContext: ctx,
 	}
-	publicCtx.addV1API(mux.PathPrefix("/v1").Subrouter())
+	publicCtx.addV1API(mux.PathPrefix("/api/v1").Subrouter())
 
 	return srv
 }
