@@ -25,6 +25,7 @@ ENCODE_BATCH_SIZE = 128
 
 CHECKPOINT_PATH = '.checkpoint'
 CHECKPOINT_TEMP_PATH = '.checkpoint.temp'
+CHECKPOINT_DEL_PATH = '.checkpoint.del' # Holds relative paths removed from the checkpoint
 
 def get_photos():
     '''
@@ -65,6 +66,14 @@ def get_checkpoint_paths():
                 break
             file_names.add(line.strip())
 
+    if os.path.isfile(CHECKPOINT_DEL_PATH):
+        with open(CHECKPOINT_DEL_PATH, 'r') as f:
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                file_names.remove(line.strip())
+
     return file_names
 
 def parse_exif_timestamp(timestampStr: str):
@@ -76,6 +85,23 @@ def parse_exif_timestamp(timestampStr: str):
     dt = datetime.fromisoformat(isoStr)
     return timegm(dt.timetuple())
 
+def sanitize_exif_tag_value(value):
+    if type(value) is list:
+        vals = [sanitize_exif_tag_value(val) for val in value]
+        return vals
+    elif isinstance(value, tuple):
+        vals = [sanitize_exif_tag_value(value[i]) for i in range(len(value))]
+        return vals
+    elif type(value) is TiffImagePlugin.IFDRational:
+        if value.denominator == 0:
+            return None
+        else:
+            return float(value)
+    elif type(value) is bytes:
+        return value.hex()
+    else:
+        return value
+
 def extract_exif(img: Image):
     '''
     Extracts EXIF tags found in the image.
@@ -83,13 +109,7 @@ def extract_exif(img: Image):
     exif = img.getexif()
     tags = { ExifTags.TAGS[k]: v for k, v in exif.items() if k in ExifTags.TAGS }
     for k, v in tags.items():
-        if type(v) is TiffImagePlugin.IFDRational:
-            if v.denominator == 0:
-                tags[k] = None
-            else:
-                tags[k] = float(v)
-        elif type(v) is bytes:
-            tags[k] = v.hex()
+        tags[k] = sanitize_exif_tag_value(v)
     return tags
 
 def extract_timestamp(path: str, exif_tags: dict[str, any]):
@@ -98,9 +118,21 @@ def extract_timestamp(path: str, exif_tags: dict[str, any]):
         if dt != None:
             return dt
 
-    match = re.search('(?P<year>[12]\d{3})[\-._:]?(?P<month>[01]\d)[\-._:]?(?P<day>[0-3]\d)' +
-                      '[\-._ ]+(?P<time>(?P<hour>[012]\d)[\-._:]?(?P<minute>[0-5]\d)[\-._:]?(?P<second>[0-5]\d))?',
-                     path)
+    match = re.search('[^0-9]' +
+                      '(?P<year>[12]\d{3})' +
+                      '(?P<date_sep>[\-._:]?)' +
+                      '(?P<month>0[1-9]|1[0-2])' +
+                      '(?P=date_sep)' +
+                      '(?P<day>[0-2][0-9]|3[01])' +
+                      '[^0-9]+' +
+                      '(?P<time>' +
+                        '(?P<hour>[012]\d)' +
+                        '(?P<time_sep>[\-._:]?)' +
+                        '(?P<minute>[0-5]\d)' +
+                        '(?P=time_sep)' +
+                        '(?P<second>[0-5]\d)' +
+                      ')?',
+                      path)
     if match == None:
         return None
 
