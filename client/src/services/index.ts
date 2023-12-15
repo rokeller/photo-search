@@ -1,2 +1,7 @@
 export { PhotoService } from './PhotoService';
-export type { PhotoResultItem, PhotoResultsResponse } from './PhotoService';
+export type {
+    PhotoFilter,
+    PhotoFilterChangedEvent,
+    PhotoResultItem,
+    PhotoResultsResponse
+} from './PhotoService';

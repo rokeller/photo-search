@@ -12,19 +12,12 @@
     right: 0;
     bottom: 0;
     padding: 20px;
-}
-
-.view.view-off {
-    display: none;
-}
-
-.view.view-on {
     overflow: auto;
     display: flex;
     justify-content: center;
 }
 
-.view.view-on img {
+.view img {
     opacity: 1;
     margin: 8px;
 }

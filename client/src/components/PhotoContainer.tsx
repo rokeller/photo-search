@@ -41,8 +41,18 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
 
     function onViewKeyUp(ev: KeyboardEvent) {
         if (ev.key === 'Escape') {
-            setPhotoId(undefined);
+            hidePhoto();
         }
+    }
+
+    function showPhoto(photoId: string) {
+        setPhotoId(photoId);
+        document.body.classList.add('overflow-open');
+    }
+
+    function hidePhoto() {
+        document.body.classList.remove('overflow-open');
+        setPhotoId(undefined);
     }
 
     return <div className='photos'>
@@ -50,18 +60,20 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
             {
                 photos?.map(
                     (item, index) => <div key={index + '-' + item.id} className='item'>
-                        <Photo details={item} resultIndex={index} onView={() => setPhotoId(item.id)} />
+                        <Photo details={item} resultIndex={index}
+                            onView={() => showPhoto(item.id)} />
                     </div>
                 )
             }
         </Masonry>
-        <div className={'view ' + (photoId !== undefined ? 'view-on' : 'view-off')}>
-            {
-                photoId !== undefined ?
-                    <img src={PhotoService.getPhotoSrc(photoId)} /> :
-                    <></>
-            }
-            <div className='close-btn' onClick={() => setPhotoId(undefined)}>✖️</div>
-        </div>
+        {
+            photoId !== undefined ?
+                <div className='view'>
+                    <img src={PhotoService.getPhotoSrc(photoId)} />
+                    <div className='close-btn' onClick={hidePhoto}>✖️</div>
+                </div> :
+                <></>
+        }
+
     </div >
 }

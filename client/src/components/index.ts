@@ -1,3 +1,4 @@
+export { FilterSettings } from './FilterSettings';
 export { Photo } from './Photo';
 export { PhotoContainer } from './PhotoContainer';
 export { PhotoFilterControls } from './PhotoFilterControls';

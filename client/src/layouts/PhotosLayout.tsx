@@ -1,6 +1,6 @@
 import { Link, Outlet, useParams } from 'react-router-dom';
 import faviconUrl from '../assets/favicon-96.png';
-import { SearchBox } from '../components';
+import { PhotoFilterControls, SearchBox } from '../components';
 
 interface PhotosLayoutParams {
     query?: string;
@@ -19,6 +19,7 @@ export default function PhotosLayout() {
                     className='logo' />
             </Link>
             <SearchBox query={query} />
+            <PhotoFilterControls />
         </div>
 
         <div className='photos-container'>
