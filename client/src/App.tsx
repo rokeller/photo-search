@@ -1,4 +1,4 @@
-import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements, useRouteError } from 'react-router-dom';
+import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements, useParams, useRouteError } from 'react-router-dom';
 import './App.css';
 import { SearchPhotoResults, SimilarPhotoResults } from './components';
 import { MainLayout, PhotosLayout } from './layouts';
@@ -16,6 +16,26 @@ function RouteError() {
     </div>
 }
 
+function PhotoResultsForSearch() {
+    const { query } = useParams();
+
+    if (query) {
+        return <SearchPhotoResults query={query} />;
+    } else {
+        return null;
+    }
+}
+
+function PhotoResultsForRecommend() {
+    const { photoId } = useParams();
+
+    if (photoId) {
+        return <SimilarPhotoResults photoId={photoId} />;
+    } else {
+        return null;
+    }
+}
+
 export default function App() {
     const router = createBrowserRouter(
         createRoutesFromElements(
@@ -24,8 +44,10 @@ export default function App() {
                 errorElement={<RouteError />}>
                 <Route index element={<Home />} />
                 <Route path='/photos/*' element={<PhotosLayout />}>
-                    <Route path='search/:query' element={<SearchPhotoResults />} />
-                    <Route path='similar/:photoId' element={<SimilarPhotoResults />} />
+                    <Route path='search/:query'
+                        element={<PhotoResultsForSearch />} />
+                    <Route path='similar/:photoId'
+                        element={<PhotoResultsForRecommend />} />
                 </Route>
                 <Route path='/settings' element={<div>settings</div>} />
             </Route>

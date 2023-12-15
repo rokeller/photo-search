@@ -16,11 +16,13 @@
 }
 
 .photos-container {
-    margin: 76px 0 0 0;
-    padding: 0 8px;
+    margin: 76px 0 48px 0;
+    padding: 0 8px 8px 8px;
 }
 
 .footer {
+    background-color: black;
+    opacity: 0.66;
     z-index: 0;
     box-sizing: border-box;
     position: fixed;

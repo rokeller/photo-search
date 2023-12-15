@@ -5,7 +5,7 @@ interface QueryPhotosRequest {
 }
 
 interface RecommendSimilarPhotosRequest {
-    id: string;
+    photoId: string;
     limit?: number;
     offset?: number;
 }
@@ -37,13 +37,13 @@ class PhotoServiceImpl {
         return result;
     }
 
-    public async recommend({ id, limit, offset }: RecommendSimilarPhotosRequest) {
+    public async recommend({ photoId, limit, offset }: RecommendSimilarPhotosRequest) {
         const resp = await fetch('/api/v1/photos/recommend', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({ id, limit, offset })
+            body: JSON.stringify({ id: photoId, limit, offset, })
         });
 
         const result = (await resp.json()) as PhotoResultsResponse;
