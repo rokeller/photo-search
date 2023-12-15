@@ -60,7 +60,7 @@ func (c publicServerContext) handleV1SearchPhotos(w http.ResponseWriter, r *http
 		limit = *req.Limit
 	}
 
-	res, err := c.search(req.Query, limit, req.Offset)
+	res, err := c.search(req.Query, limit, req.Offset, req.Filter)
 	if nil != err {
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
@@ -81,7 +81,7 @@ func (c publicServerContext) handleV1RecommendPhotos(w http.ResponseWriter, r *h
 		limit = *req.Limit
 	}
 
-	res, err := c.recommend(req.Id, limit, req.Offset)
+	res, err := c.recommend(req.Id, limit, req.Offset, req.Filter)
 	if nil != err {
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)

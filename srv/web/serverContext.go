@@ -164,7 +164,12 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 	return nil
 }
 
-func (c *serverContext) search(query string, limit uint, offset *uint) (*models.PhotoResultsResponse, error) {
+func (c *serverContext) search(
+	query string,
+	limit uint,
+	offset *uint,
+	filter *models.PhotoFilter,
+) (*models.PhotoResultsResponse, error) {
 	v, err := c.getEmbedding(query)
 	if nil != err {
 		glog.Errorf("Failed to get embedding for query '%s': %v", query, err)
@@ -180,11 +185,15 @@ func (c *serverContext) search(query string, limit uint, offset *uint) (*models.
 		finalOffset = uint64(*offset)
 	}
 
+	qdrantFilter := makeQdrantFilter(filter)
+	glog.V(1).Infof("Search filter: %v", qdrantFilter)
+
 	r, err := client.Search(ctx, &pb.SearchPoints{
 		CollectionName: c.coll,
 		Vector:         v,
 		Limit:          uint64(limit),
 		Offset:         &finalOffset,
+		Filter:         qdrantFilter,
 		WithPayload: &pb.WithPayloadSelector{
 			SelectorOptions: &pb.WithPayloadSelector_Enable{Enable: true},
 		},
@@ -201,6 +210,7 @@ func (c *serverContext) recommend(
 	id string,
 	limit uint,
 	offset *uint,
+	filter *models.PhotoFilter,
 ) (*models.PhotoResultsResponse, error) {
 	client := pb.NewPointsClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -211,6 +221,9 @@ func (c *serverContext) recommend(
 		finalOffset = uint64(*offset)
 	}
 
+	qdrantFilter := makeQdrantFilter(filter)
+	glog.V(1).Infof("Recommend filter: %v", qdrantFilter)
+
 	r, err := client.Recommend(ctx, &pb.RecommendPoints{
 		CollectionName: c.coll,
 		Positive: []*pb.PointId{
@@ -220,6 +233,7 @@ func (c *serverContext) recommend(
 		},
 		Limit:  uint64(limit),
 		Offset: &finalOffset,
+		Filter: qdrantFilter,
 		WithPayload: &pb.WithPayloadSelector{
 			SelectorOptions: &pb.WithPayloadSelector_Enable{Enable: true},
 		},
@@ -302,10 +316,8 @@ func makePhotoResultsResponse(scoredItems []*pb.ScoredPoint) *models.PhotoResult
 	for i, r := range scoredItems {
 		items[i] = &models.PhotoResultItem{
 			Id:        r.Id.GetUuid(),
-			Score:     r.Score,
 			Path:      *getPathFromPayload(r.Payload),
 			Timestamp: getTimestampFromPayload(r.Payload),
-			Camera:    getCameraFromPayload(r.Payload),
 		}
 	}
 
@@ -439,4 +451,49 @@ func getExifFieldFromPayload(payload map[string]*pb.Value, fieldName string) *pb
 	}
 
 	return field
+}
+
+func makeQdrantFilter(filter *models.PhotoFilter) *pb.Filter {
+	if nil == filter {
+		return nil
+	}
+
+	var must []*pb.Condition
+
+	if nil != filter.NotBefore || nil != filter.NotAfter {
+		var notBefore *float64
+		var notAfter *float64
+
+		if nil != filter.NotBefore {
+			val := float64(*filter.NotBefore)
+			notBefore = &val
+		}
+
+		if nil != filter.NotAfter {
+			val := float64(*filter.NotAfter)
+			notAfter = &val
+		}
+
+		timestampFilter := &pb.Condition{
+			ConditionOneOf: &pb.Condition_Field{
+				Field: &pb.FieldCondition{
+					Key: METADATA_TIMESTAMP,
+					Range: &pb.Range{
+						Gte: notBefore,
+						Lt:  notAfter,
+					},
+				},
+			},
+		}
+
+		must = append(must, timestampFilter)
+	}
+
+	if len(must) > 0 {
+		return &pb.Filter{
+			Must: must,
+		}
+	}
+
+	return nil
 }
