@@ -164,6 +164,38 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 	return nil
 }
 
+func (c *serverContext) delete(items []string) error {
+	client := pb.NewPointsClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pointIds := make([]*pb.PointId, len(items))
+	for i, item := range items {
+		pointIds[i] = &pb.PointId{
+			PointIdOptions: &pb.PointId_Uuid{
+				Uuid: pathHash(item),
+			},
+		}
+	}
+
+	_, err := client.Delete(ctx, &pb.DeletePoints{
+		CollectionName: c.coll,
+		Points: &pb.PointsSelector{
+			PointsSelectorOneOf: &pb.PointsSelector_Points{
+				Points: &pb.PointsIdsList{
+					Ids: pointIds,
+				},
+			},
+		},
+	})
+	if nil != err {
+		glog.Errorf("Failed to delete points: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func (c *serverContext) search(
 	query string,
 	limit uint,

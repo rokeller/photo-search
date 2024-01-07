@@ -14,3 +14,7 @@ type ItemPayload struct {
 	Timestamp *int64         `json:"timestamp"`
 	Exif      map[string]any `json:"exif"`
 }
+
+type DeleteFromIndexRequest struct {
+	Items []string `json:"paths"`
+}
