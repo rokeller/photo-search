@@ -20,7 +20,7 @@ function PhotoResultsForSearch() {
     const { query } = useParams();
 
     if (query) {
-        return <SearchPhotoResults query={query} />;
+        return <SearchPhotoResults key={'search-' + query} query={query} />;
     } else {
         return null;
     }
@@ -30,7 +30,7 @@ function PhotoResultsForRecommend() {
     const { photoId } = useParams();
 
     if (photoId) {
-        return <SimilarPhotoResults photoId={photoId} />;
+        return <SimilarPhotoResults key={'recommend-' + photoId} photoId={photoId} />;
     } else {
         return null;
     }
