@@ -7,13 +7,15 @@ interface FilterSettingsProps {
 
 export function FilterSettings({ onClose }: FilterSettingsProps) {
     const filter = PhotoService.getFilter();
-    const [notBefore, setNotBefore] = useState<Date | undefined>(filter?.notBefore);
-    const [notAfter, setNotAfter] = useState<Date | undefined>(filter?.notAfter);
+    const [notBefore, setNotBefore] = useState(filter?.notBefore);
+    const [notAfter, setNotAfter] = useState(filter?.notAfter);
+    const [onThisDay, setOnThisDay] = useState(filter?.onThisDay);
 
     function apply() {
         const filter = {
             notBefore,
             notAfter,
+            onThisDay,
         };
         PhotoService.setFilter(filter);
         close();
@@ -22,6 +24,7 @@ export function FilterSettings({ onClose }: FilterSettingsProps) {
     function reset() {
         setNotBefore(undefined);
         setNotAfter(undefined);
+        setOnThisDay(undefined);
     }
 
     function close() {
@@ -35,7 +38,7 @@ export function FilterSettings({ onClose }: FilterSettingsProps) {
         setNotAfter(notBefore);
     }
 
-    function onChangeDate(
+    function onChangeTimestamp(
         setValue: React.Dispatch<React.SetStateAction<Date | undefined>>
     ) {
         return (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +47,7 @@ export function FilterSettings({ onClose }: FilterSettingsProps) {
         }
     }
 
-    function makeInputControlDate(dt: Date | undefined) {
+    function makeInputControlTimestamp(dt: Date | undefined) {
         if (dt == undefined) {
             return '';
         }
@@ -57,14 +60,36 @@ export function FilterSettings({ onClose }: FilterSettingsProps) {
         }
     }
 
+    function onChangeDate(
+        setValue: React.Dispatch<React.SetStateAction<Date | undefined>>
+    ) {
+        return (ev: React.ChangeEvent<HTMLInputElement>) => {
+            const local = ev.target.value;
+            setValue(new Date(local + 'T00:00:00Z'));
+        }
+    }
+
+    function makeInputControlDate(dt: Date | undefined) {
+        if (dt == undefined) {
+            return '';
+        }
+
+        try {
+            const isoStr = dt.toISOString();
+            return isoStr.substring(0, 4 /*year*/ + 2/*month*/ + 2 /*day*/ + 2 /*dashes*/);
+        } catch {
+            return '';
+        }
+    }
+
     return <>
         <div className='subtitle'>Date Filter</div>
 
         <div className='form-control'>
             <label>
                 <div>Not Before</div>
-                <input type='datetime-local' value={makeInputControlDate(notBefore)}
-                    onChange={onChangeDate(setNotBefore)} />
+                <input type='datetime-local' value={makeInputControlTimestamp(notBefore)}
+                    onChange={onChangeTimestamp(setNotBefore)} />
             </label>
             <div className='pointer clear-btn' title='Clear "Not Before"'
                 onClick={() => setNotBefore(undefined)}>✖️</div>
@@ -73,8 +98,8 @@ export function FilterSettings({ onClose }: FilterSettingsProps) {
         <div className='form-control'>
             <label>
                 <div>Not After</div>
-                <input type='datetime-local' value={makeInputControlDate(notAfter)}
-                    onChange={onChangeDate(setNotAfter)} />
+                <input type='datetime-local' value={makeInputControlTimestamp(notAfter)}
+                    onChange={onChangeTimestamp(setNotAfter)} />
             </label>
             <div className='pointer clear-btn' title='Clear "Not After"'
                 onClick={() => setNotAfter(undefined)}>✖️</div>
@@ -82,6 +107,16 @@ export function FilterSettings({ onClose }: FilterSettingsProps) {
         <div className='buttons'>
             <button disabled={notBefore === undefined && notAfter === undefined}
                 onClick={swapNotBeforeNotAfter}>Swap Not Before and Not After</button>
+        </div>
+
+        <div className='form-control'>
+            <label>
+                <div>On this day (any year)</div>
+                <input type='date' value={makeInputControlDate(onThisDay)}
+                    onChange={onChangeDate(setOnThisDay)} />
+            </label>
+            <div className='pointer clear-btn' title='Clear "On This Day"'
+                onClick={() => setOnThisDay(undefined)}>✖️</div>
         </div>
 
         <div className='buttons'>

@@ -46,6 +46,7 @@
 
 .filter-options-container .form-control {
     margin: 4px 0 8px 0;
+    width: 100%;
 }
 
 .filter-options-container .buttons {

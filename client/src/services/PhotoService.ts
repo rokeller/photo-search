@@ -31,11 +31,13 @@ export interface PhotoFilterChangedEvent {
 export interface PhotoFilter {
     notBefore?: Date;
     notAfter?: Date;
+    onThisDay?: Date;
 }
 
 interface ApiFilter {
     notBefore?: number;
     notAfter?: number;
+    onThisDay?: number;
 }
 
 function extractDateValue(dt: Date | undefined): number | undefined {
@@ -72,6 +74,7 @@ class PhotoServiceImpl {
             this.filter = {
                 notBefore: extractDateValue(filter?.notBefore),
                 notAfter: extractDateValue(filter?.notAfter),
+                onThisDay: extractDateValue(filter.onThisDay),
             };
         } else {
             this.filter = undefined;
@@ -94,8 +97,11 @@ class PhotoServiceImpl {
 
     public hasFilter() {
         return this.uiFilter !== undefined &&
-            (this.uiFilter.notBefore !== undefined ||
-                this.uiFilter.notAfter !== undefined);
+            (
+                this.uiFilter.notBefore !== undefined ||
+                this.uiFilter.notAfter !== undefined ||
+                this.uiFilter.onThisDay !== undefined
+            );
     }
 
     public async search({ query, limit, offset }: QueryPhotosRequest) {
