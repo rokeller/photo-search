@@ -459,6 +459,7 @@ func makeQdrantFilter(filter *models.PhotoFilter) *pb.Filter {
 	}
 
 	var must []*pb.Condition
+	var should []*pb.Condition
 
 	if nil != filter.NotBefore || nil != filter.NotAfter {
 		var notBefore *float64
@@ -489,9 +490,36 @@ func makeQdrantFilter(filter *models.PhotoFilter) *pb.Filter {
 		must = append(must, timestampFilter)
 	}
 
-	if len(must) > 0 {
+	if nil != filter.OnThisDay {
+		timestamp := time.Unix(*filter.OnThisDay, 0)
+		curYear, curMonth, curDay := timestamp.Date()
+		glog.V(2).Infof("Create filter for on-this-day %v", timestamp)
+
+		for year := 2000; year <= curYear+1; year++ {
+			startOfDay := time.Date(year, curMonth, curDay, 0, 0, 0, 0, time.UTC)
+			notBefore := float64(startOfDay.Unix())
+			notAfter := notBefore + 24*60*60
+
+			dateRangeForYear := &pb.Condition{
+				ConditionOneOf: &pb.Condition_Field{
+					Field: &pb.FieldCondition{
+						Key: METADATA_TIMESTAMP,
+						Range: &pb.Range{
+							Gte: &notBefore,
+							Lt:  &notAfter,
+						},
+					},
+				},
+			}
+
+			should = append(should, dateRangeForYear)
+		}
+	}
+
+	if len(must) > 0 || len(should) > 0 {
 		return &pb.Filter{
-			Must: must,
+			Must:   must,
+			Should: should,
 		}
 	}
 

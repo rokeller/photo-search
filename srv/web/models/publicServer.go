@@ -1,24 +1,27 @@
 package models
 
-type SearchPhotosRequest struct {
-	Query  string `json:"query"`
-	Limit  *uint  `json:"limit"`
-	Offset *uint  `json:"offset"`
+type PhotosRequestBase struct {
+	Limit  *uint `json:"limit,omitempty"`
+	Offset *uint `json:"offset,omitempty"`
 
 	Filter *PhotoFilter `json:"filter,omitempty"`
 }
 
-type RecommendPhotosRequest struct {
-	Id     string `json:"id"`
-	Limit  *uint  `json:"limit"`
-	Offset *uint  `json:"offset"`
+type SearchPhotosRequest struct {
+	Query string `json:"query"`
+	PhotosRequestBase
+}
 
-	Filter *PhotoFilter `json:"filter,omitempty"`
+type RecommendPhotosRequest struct {
+	Id string `json:"id"`
+	PhotosRequestBase
 }
 
 type PhotoFilter struct {
 	NotBefore *int64 `json:"notBefore,omitempty"`
 	NotAfter  *int64 `json:"notAfter,omitempty"`
+
+	OnThisDay *int64 `json:"onThisDay,omitempty"`
 }
 
 type PhotoResultsResponse struct {
