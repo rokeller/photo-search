@@ -22,7 +22,8 @@ Photo Search comes with a few separate components.
   run inside a Kubernetes cluster with access to the embedding server.
 * A modern _browser GUI_ ([`client/`](client/)) written largely in TypeScript
   and using react that uses the above web server to search and retrieve the
-  photos. This is designed to run a Kubernetes cluster.
+  photos. The static assets produced for the client are designed to be served
+  by the above _web server_.
 
 ## How to run
 
