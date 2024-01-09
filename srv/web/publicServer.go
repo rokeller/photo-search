@@ -28,9 +28,31 @@ func NewPublicServer(ctx *serverContext) *http.Server {
 	publicCtx := publicServerContext{
 		serverContext: ctx,
 	}
-	publicCtx.addV1API(mux.PathPrefix("/api/v1").Subrouter())
+
+	wellKnownRouter := mux.PathPrefix("/.well-known").Subrouter()
+	publicCtx.addWellKnown(wellKnownRouter)
+
+	apiRouter := mux.PathPrefix("/api/v1").Subrouter()
+	authMiddleware := NewAuthenticationMiddleware(
+		ctx.oauthSettings.Audience,
+		ctx.oauthSettings.Issuer,
+	)
+	// The APIs require authentication.
+	apiRouter.Use(authMiddleware.Middleware)
+	publicCtx.addV1API(apiRouter)
 
 	return srv
+}
+
+func (c publicServerContext) addWellKnown(mux *mux.Router) {
+	mux.HandleFunc("/flrx39.net/photoSearch/auth/config", c.handleWellKnownAuthConfig).
+		Methods("GET")
+}
+
+func (c publicServerContext) handleWellKnownAuthConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("content-type", "application/json; charset=utf-8")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(c.serverContext.oauthSettings)
 }
 
 func (c publicServerContext) addV1API(mux *mux.Router) {
