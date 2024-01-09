@@ -37,3 +37,14 @@ type PhotoResultItem struct {
 type EmbeddingResponse struct {
 	Vector []float32 `json:"v"`
 }
+
+type OAuthSettings struct {
+	// Configuration needed for client / SPA
+	ClientId  string   `json:"clientId" yaml:"clientId"`
+	Authority string   `json:"authority" yaml:"authority"`
+	Scopes    []string `json:"scopes" yaml:"scopes"`
+
+	// Configuration needed for server
+	Audience string `json:"-" yaml:"audience"`
+	Issuer   string `json:"-" yaml:"issuer"`
+}

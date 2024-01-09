@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -37,6 +39,8 @@ type serverContext struct {
 	coll                     string
 	embeddingsServiceBaseUrl string
 	photosRootDir            string
+
+	oauthSettings models.OAuthSettings
 }
 
 func newServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir string) (*serverContext, error) {
@@ -52,9 +56,29 @@ func newServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir string
 		coll:                     coll,
 		embeddingsServiceBaseUrl: strings.TrimSuffix(embeddingsServiceBaseUrl, "/"),
 		photosRootDir:            photosRootDir,
+
+		oauthSettings: loadOAuthSettings(),
 	}
 
 	return ctx.ensureCollection()
+}
+
+func loadOAuthSettings() models.OAuthSettings {
+	file, err := os.Open("oauth.yaml")
+	if nil != err {
+		glog.Exitf("Failed to read oauth.yaml: %v", err)
+	}
+
+	defer file.Close()
+
+	var settings models.OAuthSettings
+	decoder := yaml.NewDecoder(file)
+	err = decoder.Decode(&settings)
+	if nil != err {
+		glog.Exitf("Failed to parse oauth.yaml: %v", err)
+	}
+
+	return settings
 }
 
 func (c *serverContext) ensureCollection() (*serverContext, error) {
