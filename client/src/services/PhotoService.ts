@@ -23,6 +23,10 @@ export interface PhotoResultItem {
     timestamp?: number;
 }
 
+enum PhotoEventNames {
+    PhotoFilterChanged = 'photoFilterChanged',
+}
+
 type PhotoFilterChanged = 'photoFilterChanged';
 type PhotoEvents = PhotoFilterChanged;
 
@@ -95,7 +99,7 @@ class PhotoServiceImpl {
         }
 
         if (!Object.is(oldFilter, filter)) {
-            const ev = new CustomEvent('photoFilterChanged', {
+            const ev = new CustomEvent(PhotoEventNames.PhotoFilterChanged, {
                 detail: {
                     old: oldFilter,
                     new: filter,
