@@ -1,3 +1,6 @@
+import { InteractionRequiredAuthError, PublicClientApplication } from '@azure/msal-browser';
+import { getMsalConfig, getRequest } from './AuthConfig';
+
 interface QueryPhotosRequest {
     query: string;
     limit?: number;
@@ -48,7 +51,18 @@ function extractDateValue(dt: Date | undefined): number | undefined {
     return dt.valueOf() / 1000;
 }
 
+async function initMsalInstance() {
+    const config = await getMsalConfig();
+    const instance = new PublicClientApplication(config);
+
+    await instance.initialize();
+
+    return instance;
+}
+
 class PhotoServiceImpl {
+    private readonly msalAppPromise = initMsalInstance();
+
     private uiFilter?: PhotoFilter = {};
     private filter?: ApiFilter = {};
 
@@ -139,6 +153,10 @@ class PhotoServiceImpl {
         }
 
         return url;
+    }
+
+    public async getMsalInstance() {
+        return await this.msalAppPromise;
     }
 }
 

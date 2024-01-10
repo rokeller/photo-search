@@ -1,8 +1,9 @@
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements, useParams, useRouteError } from 'react-router-dom';
 import './App.css';
 import { SearchPhotoResults, SimilarPhotoResults } from './components';
 import { MainLayout, PhotosLayout } from './layouts';
-import { Home } from './pages';
+import { Home, Login } from './pages';
 
 function RouteError() {
     const error = useRouteError();
@@ -54,5 +55,12 @@ export default function App() {
         )
     );
 
-    return <RouterProvider router={router} />;
+    return <>
+        <UnauthenticatedTemplate>
+            <Login />
+        </UnauthenticatedTemplate>
+        <AuthenticatedTemplate>
+            <RouterProvider router={router} />
+        </AuthenticatedTemplate>
+    </>;
 }

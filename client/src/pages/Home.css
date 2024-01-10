@@ -1,15 +1,12 @@
-.welcome {
-    display: flex;
-    min-height: 100vh;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
 .welcome .logo {
     vertical-align: middle;
 }
 
 .welcome .title {
     font-size: 250%;
+}
+
+.welcome .controls {
+    display: flex;
+    justify-content: center;
 }

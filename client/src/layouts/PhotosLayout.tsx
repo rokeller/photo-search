@@ -1,10 +1,9 @@
 import { Link, Outlet, useParams } from 'react-router-dom';
 import faviconUrl from '../assets/favicon-96.png';
-import { PhotoFilterControls, SearchBox } from '../components';
+import { LogoutButton, PhotoFilterControls, SearchBox } from '../components';
 
 interface PhotosLayoutParams {
     query?: string;
-    photoId?: string;
 }
 
 export default function PhotosLayout() {
@@ -20,6 +19,7 @@ export default function PhotosLayout() {
             </Link>
             <SearchBox query={query} />
             <PhotoFilterControls />
+            <LogoutButton />
         </div>
 
         <div className='photos-container'>

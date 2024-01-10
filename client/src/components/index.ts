@@ -1,4 +1,6 @@
 export { FilterSettings } from './FilterSettings';
+export { LoginButton } from './LoginButton';
+export { LogoutButton } from './LogoutButton';
 export { Photo } from './Photo';
 export { PhotoContainer } from './PhotoContainer';
 export { PhotoFilterControls } from './PhotoFilterControls';
