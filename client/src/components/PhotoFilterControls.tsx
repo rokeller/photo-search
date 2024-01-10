@@ -20,7 +20,7 @@ export function PhotoFilterControls() {
 
     return <div className='filter'>
         <div className={'icon pointer' + (hasFilter ? ' has-filter' : '')}
-            onClick={show}>⚙️</div>
+            onClick={show} title="Filter Settings">⚙️</div>
         {
             showFilter ?
                 <div className='filter-options'>
