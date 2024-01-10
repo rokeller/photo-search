@@ -123,7 +123,7 @@ class PhotoServiceImpl {
     }
 
     public async search({ query, limit, offset }: QueryPhotosRequest) {
-        const resp = await fetch('/api/v1/photos/search', {
+        const resp = await this.fetch('/api/v1/photos/search', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
@@ -137,7 +137,7 @@ class PhotoServiceImpl {
     }
 
     public async recommend({ photoId, limit, offset }: RecommendSimilarPhotosRequest) {
-        const resp = await fetch('/api/v1/photos/recommend', {
+        const resp = await this.fetch('/api/v1/photos/recommend', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
@@ -159,8 +159,51 @@ class PhotoServiceImpl {
         return url;
     }
 
+    public async getPhoto(id: string, width?: number) {
+        const url = this.getPhotoSrc(id, width);
+        const resp = await this.fetch(url);
+        const blob = await resp.blob();
+
+        return URL.createObjectURL(blob);
+    }
+
     public async getMsalInstance() {
         return await this.msalAppPromise;
+    }
+
+    private async fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        const finalInit: RequestInit = init || {};
+        const authHeaders = await this.authenticateRequest();
+
+        finalInit.headers = { ...(finalInit.headers || {}), ...authHeaders };
+
+        const resp = await fetch(url, finalInit);
+        return resp;
+    }
+
+    private async authenticateRequest() {
+        let accessToken: string | null = null;
+        const headers: Record<string, string> = {};
+
+        const msalInstance = await this.msalAppPromise;
+        const request = await getRequest();
+
+        try {
+            const response = await msalInstance.acquireTokenSilent(request);
+            accessToken = response?.accessToken;
+        } catch (error) {
+            console.error('failed to silently get a new token.', error, error instanceof InteractionRequiredAuthError);
+            const response = await msalInstance.acquireTokenPopup(request);
+            accessToken = response?.accessToken;
+        }
+
+        if (accessToken) {
+            headers['authorization'] = 'Bearer ' + accessToken;
+        } else {
+            console.error('failed to find an access token.');
+        }
+
+        return headers;
     }
 }
 

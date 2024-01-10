@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PhotoResultItem, PhotoService } from '../services';
 
-interface PhotoProps {
+interface PhotoTileProps {
     resultIndex: number;
     details: PhotoResultItem;
     onView?: () => void;
@@ -18,12 +19,22 @@ const dateOnlyFormat = new Intl.DateTimeFormat(undefined, {
     timeZone: 'UTC',
 });
 
-export function Photo({ details, resultIndex, onView }: PhotoProps) {
+export function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
     const navigate = useNavigate();
     const timestamp = details.timestamp ? new Date(details.timestamp * 1000) : undefined;
+    const [photoUrl, setPhotoUrl] = useState<string>();
+
+    useEffect(() => {
+        async function loadPhoto() {
+            const photoUrl = await PhotoService.getPhoto(details.id, 512);
+            setPhotoUrl(photoUrl);
+        }
+
+        loadPhoto();
+    }, [details]);
 
     return <>
-        <img src={PhotoService.getPhotoSrc(details.id, 512)} title={details.path}
+        <img src={photoUrl} title={details.path}
             onClick={() => onView ? onView() : null} />
         <div className='legend'>
             <div className='index'>{resultIndex + 1}</div>
@@ -36,7 +47,7 @@ export function Photo({ details, resultIndex, onView }: PhotoProps) {
                 }
             </div>
             <div className='similar pointer' title='Show similar'
-                onClick={() => navigate('/photos/similar/' + encodeURI(details.id))}>☝️</div>
+                onClick={() => navigate('/photos/similar/' + encodeURI(details.id))}>💫</div>
         </div>
     </>
 }

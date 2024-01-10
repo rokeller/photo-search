@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Masonry from 'react-layout-masonry';
-import { Photo } from '.';
-import { PhotoResultItem, PhotoService } from '../services';
+import { PhotoTile, ViewPhoto } from '.';
+import { PhotoResultItem } from '../services';
 import './PhotoContainer.css';
 
 interface PhotoContainerProps {
@@ -60,7 +60,7 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
             {
                 photos?.map(
                     (item, index) => <div key={index + '-' + item.id} className='item'>
-                        <Photo details={item} resultIndex={index}
+                        <PhotoTile details={item} resultIndex={index}
                             onView={() => showPhoto(item.id)} />
                     </div>
                 )
@@ -68,10 +68,7 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
         </Masonry>
         {
             photoId !== undefined ?
-                <div className='view'>
-                    <img src={PhotoService.getPhotoSrc(photoId)} />
-                    <div className='close-btn' onClick={hidePhoto}>✖️</div>
-                </div> :
+                <ViewPhoto photoId={photoId} hidePhoto={hidePhoto} /> :
                 <></>
         }
 
