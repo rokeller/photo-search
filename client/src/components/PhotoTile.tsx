@@ -22,7 +22,7 @@ const dateOnlyFormat = new Intl.DateTimeFormat(undefined, {
 export function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
     const navigate = useNavigate();
     const timestamp = details.timestamp ? new Date(details.timestamp * 1000) : undefined;
-    const [photoUrl, setPhotoUrl] = useState<string>();
+    const [photoUrl, setPhotoUrl] = useState<string>('/please-wait.svg');
 
     useEffect(() => {
         async function loadPhoto() {

@@ -7,7 +7,7 @@ interface ViewPhotoProps {
 }
 
 export function ViewPhoto({ photoId, hidePhoto }: ViewPhotoProps) {
-    const [photoUrl, setPhotoUrl] = useState<string>();
+    const [photoUrl, setPhotoUrl] = useState<string>('/please-wait.svg');
 
     useEffect(() => {
         const load = async () => {
@@ -17,10 +17,6 @@ export function ViewPhoto({ photoId, hidePhoto }: ViewPhotoProps) {
 
         load();
     }, [photoId]);
-
-    if (photoUrl === undefined) {
-        return <>Please wait ...</>;
-    }
 
     return <div className='view'>
         <img src={photoUrl} />

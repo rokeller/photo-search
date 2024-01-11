@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { UserConfig, defineConfig } from 'vite';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -20,6 +21,11 @@ export default defineConfig(({ command }) => {
     return {
         ...mergeConfig,
         base,
-        plugins: [react()],
+        plugins: [
+            react(),
+            ViteImageOptimizer({
+                test: /\.svg$/i,
+            }),
+        ],
     }
 });
