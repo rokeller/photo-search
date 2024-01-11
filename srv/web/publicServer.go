@@ -41,6 +41,9 @@ func NewPublicServer(ctx *serverContext) *http.Server {
 	apiRouter.Use(authMiddleware.Middleware)
 	publicCtx.addV1API(apiRouter)
 
+	spa := spaHandler{staticPath: "dist", indexPath: "index.html"}
+	mux.PathPrefix("/").Handler(spa)
+
 	return srv
 }
 
@@ -123,7 +126,7 @@ func (c publicServerContext) handleV1PhotosGetById(w http.ResponseWriter, r *htt
 	} else {
 		relPath := getPathFromPayload(payload)
 		absPath := path.Join(c.photosRootDir, *relPath)
-		w.Header().Add("cache-control", "max-age=31556736")
+		w.Header().Add("cache-control", "max-age=31556736, immutable")
 		http.ServeFile(w, r, absPath)
 	}
 }
@@ -161,7 +164,7 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 		glog.V(1).Infof("Missing 'Orientation' tag in '%s'.", *relPath)
 	}
 
-	w.Header().Add("cache-control", "max-age=31556736")
+	w.Header().Add("cache-control", "max-age=31556736, immutable")
 	w.Header().Add("content-type", "image/jpeg")
 
 	jpeg.Encode(w, image, &jpeg.Options{Quality: 66})

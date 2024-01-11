@@ -4,11 +4,9 @@ import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
-    let base = '/dist';
     const mergeConfig: UserConfig = {};
 
     if (command === 'serve') {
-        base = '/';
         mergeConfig.server = {
             host: true,
             proxy: {
@@ -20,7 +18,6 @@ export default defineConfig(({ command }) => {
 
     return {
         ...mergeConfig,
-        base,
         plugins: [
             react(),
             ViteImageOptimizer({
