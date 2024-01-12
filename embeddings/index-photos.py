@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import datetime
 from calendar import timegm
 import glob
@@ -9,6 +10,7 @@ from shutil import copyfile, move
 from sentence_transformers import SentenceTransformer
 from PIL import Image, ExifTags, TiffImagePlugin
 import numpy as np
+from torch import Tensor
 
 args = sys.argv[1:]
 
@@ -27,7 +29,7 @@ CHECKPOINT_PATH = '.checkpoint'
 CHECKPOINT_TEMP_PATH = '.checkpoint.temp'
 CHECKPOINT_DEL_PATH = '.checkpoint.del' # Holds relative paths removed from the checkpoint
 
-def get_photos():
+def get_photos() -> set[str]:
     '''
     Gets a set of relative file names to all photos that were found.
     '''
@@ -37,7 +39,7 @@ def get_photos():
             photo_names.add(path)
     return photo_names
 
-def checkpoint(file_names):
+def checkpoint(file_names: Iterable[str]):
     '''
     Checkpoints the given file names. That is, the file names are added to the
     checkpoint file to make sure they're not indexed again in the future.
@@ -50,7 +52,7 @@ def checkpoint(file_names):
             f.write(f'{path}\n')
     move(CHECKPOINT_TEMP_PATH, CHECKPOINT_PATH)
 
-def get_checkpoint_paths():
+def get_checkpoint_paths() -> set[str]:
     '''
     Retrieves a set of all relative file names of photos that are in the checkpoint
     file, i.e. paths to photos that are already indexed.
@@ -76,7 +78,7 @@ def get_checkpoint_paths():
 
     return file_names
 
-def parse_exif_timestamp(timestampStr: str):
+def parse_exif_timestamp(timestampStr: str) -> (int | None):
     match = re.match(r'^(\d{4}).(\d{2}).(\d{2})\s+(\d{2}:\d{2}:\d{2})$', timestampStr)
     if match == None:
         return None
@@ -85,7 +87,7 @@ def parse_exif_timestamp(timestampStr: str):
     dt = datetime.fromisoformat(isoStr)
     return timegm(dt.timetuple())
 
-def sanitize_exif_tag_value(value):
+def sanitize_exif_tag_value(value: any) -> (list | float | str | None):
     if type(value) is list:
         vals = [sanitize_exif_tag_value(val) for val in value]
         return vals
@@ -102,7 +104,7 @@ def sanitize_exif_tag_value(value):
     else:
         return value
 
-def extract_exif(img: Image):
+def extract_exif(img: Image) -> dict[str, any]:
     '''
     Extracts EXIF tags found in the image.
     '''
@@ -112,7 +114,7 @@ def extract_exif(img: Image):
         tags[k] = sanitize_exif_tag_value(v)
     return tags
 
-def extract_timestamp(path: str, exif_tags: dict[str, any]):
+def extract_timestamp(path: str, exif_tags: dict[str, any]) -> (int | None):
     if 'DateTime' in exif_tags:
         dt = parse_exif_timestamp(exif_tags['DateTime'])
         if dt != None:
@@ -145,7 +147,7 @@ def extract_timestamp(path: str, exif_tags: dict[str, any]):
     dt = datetime.fromisoformat(isoStr)
     return timegm(dt.timetuple())
 
-def calculate_embeddings(file_paths):
+def calculate_embeddings(file_paths: Iterable[str]) -> Iterable[tuple[dict[str, any], Tensor]]:
     '''
     Calculates the embeddings for the photos in the given relative file paths.
     '''
@@ -162,7 +164,7 @@ def calculate_embeddings(file_paths):
         show_progress_bar=False)
     return zip(payloads, embeddings)
 
-def upload_embeddings(payloads_and_embeddings):
+def upload_embeddings(payloads_and_embeddings: Iterable[tuple[dict[str, any], Tensor]]) -> bool:
     '''
     Uploads embeddings for relative file paths to the indexing server.
     '''
