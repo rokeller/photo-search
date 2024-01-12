@@ -64,7 +64,7 @@ func newServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir string
 }
 
 func loadOAuthSettings() models.OAuthSettings {
-	file, err := os.Open("oauth.yaml")
+	file, err := os.Open("config/oauth.yaml")
 	if nil != err {
 		glog.Exitf("Failed to read oauth.yaml: %v", err)
 	}
