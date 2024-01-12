@@ -1,0 +1,11 @@
+.git/
+.models/
+containers/
+embeddings.env/
+k8s/
+
+node_modules/
+dist/
+web
+
+.checkpoint
