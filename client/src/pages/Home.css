@@ -1,0 +1,12 @@
+.welcome .logo {
+    vertical-align: middle;
+}
+
+.welcome .title {
+    font-size: 250%;
+}
+
+.welcome .controls {
+    display: flex;
+    justify-content: center;
+}

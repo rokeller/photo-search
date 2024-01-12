@@ -1,0 +1,9 @@
+<svg width="512px" height="512px" viewBox="0 0 512 512" stroke="#ccc" fill="#ccc"
+    xmlns="http://www.w3.org/2000/svg">
+    <style>
+    text {font: normal 30pt sans-serif}
+    </style>
+    <text x="50%" y="50%" dy="-40pt" dominant-baseline="middle" text-anchor="middle">Please wait while we</text>
+    <text x="50%" y="50%" dy="-10pt" dominant-baseline="middle" text-anchor="middle">fetch this photo for you ...</text>
+    <text x="50%" y="50%" dy="30pt" dominant-baseline="middle" text-anchor="middle">😉</text>
+</svg>
