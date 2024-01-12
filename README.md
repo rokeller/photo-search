@@ -25,6 +25,17 @@ Photo Search comes with a few separate components.
   photos. The static assets produced for the client are designed to be served
   by the above _web server_.
 
+Access to the GUI is only granted for authenticated users (more on this later)
+such that you can enjoy searching your photos without making them available to
+everybody. Future releases may allow to configure anonymous access though.
+
+## Screenshots
+
+Here's (a blurred) view of the photos from a sample set of about 15K photos
+when searching for `French Riviera`.
+
+![Semantic search on photos](docs/screenshot.webp)
+
 ## How to run
 
 More to come here.
