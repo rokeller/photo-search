@@ -169,19 +169,19 @@ def upload_embeddings(payloads_and_embeddings: Iterable[tuple[dict[str, any], Te
     Uploads embeddings for relative file paths to the indexing server.
     '''
     url = target_base_url.strip('/') + '/v1/index'
-    for (payload, vector) in payloads_and_embeddings:
-        body = {
-            'items': [
-                {
-                    'p': payload,
-                    'v': vector.tolist(),
-                }
-            ]
-        }
-        response = requests.post(url, json=body)
-        if response.status_code != 200:
-            print(f'Index error: got status {response.status_code} for file "{payload["path"]}"')
-            return False
+    items = [{
+        'p': payload,
+        'v': vector.tolist(),
+    } for (payload, vector) in payloads_and_embeddings]
+
+    body = {
+        'items': items,
+    }
+
+    response = requests.post(url, json=body)
+    if response.status_code != 200:
+        print(f'Index error: got status {response.status_code}.')
+        return False
     return True
 
 # Figure out which photos to index. That is the set of photos that exist, minus
