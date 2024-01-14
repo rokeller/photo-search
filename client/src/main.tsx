@@ -6,6 +6,7 @@ import App from './App.tsx'
 import './index.css'
 import { PhotoService } from './services/PhotoService.ts'
 
+// eslint-disable-next-line react-refresh/only-export-components
 function AppProxyWithMsal() {
     const [msal, setMsal] = useState<IPublicClientApplication>();
 
