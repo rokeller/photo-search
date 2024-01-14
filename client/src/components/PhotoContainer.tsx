@@ -28,6 +28,12 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
     });
 
     useEffect(() => {
+        const onViewKeyUp = (ev: KeyboardEvent) => {
+            if (ev.key === 'Escape') {
+                hidePhoto();
+            }
+        };
+
         if (photoId !== undefined) {
             window.addEventListener('keyup', onViewKeyUp);
         } else {
@@ -39,11 +45,6 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
         }
     }, [photoId])
 
-    function onViewKeyUp(ev: KeyboardEvent) {
-        if (ev.key === 'Escape') {
-            hidePhoto();
-        }
-    }
 
     function showPhoto(photoId: string) {
         setPhotoId(photoId);

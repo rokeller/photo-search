@@ -24,6 +24,7 @@ jobs:
       - name: Build Client
         run: |
           yarn --cwd client install
+          yarn --cwd client lint
           VITE_APP_VERSION=pull_request yarn --cwd client build
 
       - name: Build Server

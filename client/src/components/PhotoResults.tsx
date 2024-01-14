@@ -40,13 +40,6 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
             }
         };
 
-        const onFilterChanged = () => {
-            // The filter has changed, so we need to start at the top again and
-            // fetch a new result set.
-            window.scrollTo({ top: 0 });
-            updatePhotos();
-        };
-
         useEffect(() => {
             // The props have changed, which means the driving factor for the
             // retrieveFn has changed. That implies that we move to a new result
@@ -58,12 +51,19 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
         }, [props]);
 
         useEffect(() => {
+            const onFilterChanged = () => {
+                // The filter has changed, so we need to start at the top again
+                // and fetch a new result set.
+                window.scrollTo({ top: 0 });
+                updatePhotos();
+            };
+
             PhotoService.subscribe('photoFilterChanged', onFilterChanged);
 
             return () => {
                 PhotoService.unsubscribe('photoFilterChanged', onFilterChanged);
             }
-        }, []);
+        });
 
         return <PhotoContainer photos={photos} onLoadMore={doLoadMore} />;
     }
