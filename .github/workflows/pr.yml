@@ -1,0 +1,30 @@
+name: PR
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'srv/web/go.mod'
+
+      - name: Build Client
+        run: |
+          yarn --cwd client install
+          VITE_APP_VERSION=pull_request yarn --cwd client build
+
+      - name: Build Server
+        run: go build -C srv/web
