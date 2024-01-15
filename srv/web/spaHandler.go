@@ -18,8 +18,9 @@ type spaHandler struct {
 // on the SPA handler. If a file is found, it will be served. If not, the
 // file located at the index path on the SPA handler will be served.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Join cleans results to prevent directory traversal.
+	// Join cleans results to prevent directory traversal, but let's clean it anyway.
 	path := filepath.Join(h.staticPath, r.URL.Path)
+	path = filepath.Clean(path)
 	glog.V(2).Infof("ServeStatic: %s (%s)", path, r.URL.Path)
 
 	// Check if there's a file at the given path.
