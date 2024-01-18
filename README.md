@@ -1,7 +1,11 @@
 # Photo Search by flrx39.net
 
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rokeller/photo-search)
-![Docker Image Size with architecture (latest by date/latest semver)](https://img.shields.io/docker/image-size/rokeller/photo-search)
+GitHub Release:
+[![GitHub Release](https://img.shields.io/github/v/release/rokeller/photo-search)](https://github.com/rokeller/photo-search/releases/latest)
+
+Docker:
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rokeller/photo-search)](https://hub.docker.com/r/rokeller/photo-search)
+[![Docker Image Size with architecture (latest by date/latest semver)](https://img.shields.io/docker/image-size/rokeller/photo-search)](https://hub.docker.com/r/rokeller/photo-search)
 
 This repository holds everything needed to run a browser GUI offering semantic
 search for your own photos.
