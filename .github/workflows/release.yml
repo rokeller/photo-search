@@ -22,7 +22,7 @@ jobs:
           docker image build \
             --build-arg APP_VERSION=$GITHUB_REF_NAME \
             -t ${{ env.IMAGE_NAME }}:$GITHUB_REF_NAME \
-            -f containers/web-server.Dockerfile
+            -f containers/web-server.Dockerfile \
             .
 
           echo -n "${{ secrets.DOCKER_PASSWORD }}" | docker login \
