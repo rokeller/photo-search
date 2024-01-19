@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PhotoResultItem, PhotoService } from '../services';
+import { PhotoWithRetry } from './PhotoWithRetry';
 
 interface PhotoTileProps {
     resultIndex: number;
@@ -22,20 +23,24 @@ const dateOnlyFormat = new Intl.DateTimeFormat(undefined, {
 export function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
     const navigate = useNavigate();
     const timestamp = details.timestamp ? new Date(details.timestamp * 1000) : undefined;
-    const [photoUrl, setPhotoUrl] = useState<string>('/please-wait.svg');
-
-    useEffect(() => {
-        async function loadPhoto() {
+    // A photoUrl of undefined means that we couldn't load the photo but we can try again.
+    const [photoUrl, setPhotoUrl] = useState<string | undefined>('/please-wait.svg');
+    const loadPhoto = async () => {
+        try {
             const photoUrl = await PhotoService.getPhoto(details.id, 512);
             setPhotoUrl(photoUrl);
+        } catch (e) {
+            setPhotoUrl(undefined);
         }
+    }
 
+    useEffect(() => {
         loadPhoto();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [details]);
 
     return <>
-        <img src={photoUrl} title={details.path}
-            onClick={() => onView ? onView() : null} />
+        <PhotoWithRetry details={details} photoUrl={photoUrl} onClick={onView} onRetry={loadPhoto} />
         <div className='legend'>
             <div className='index'>{resultIndex + 1}</div>
             <div className='metadata'>

@@ -162,6 +162,11 @@ class PhotoServiceImpl {
     public async getPhoto(id: string, width?: number) {
         const url = this.getPhotoSrc(id, width);
         const resp = await this.fetch(url);
+        if (resp.status != 200) {
+            console.error('failed to retrieve photo', id, 'response:', resp);
+            throw new Error('failed to retrieve photo');
+        }
+
         const blob = await resp.blob();
 
         return URL.createObjectURL(blob);
