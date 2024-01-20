@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -87,8 +88,16 @@ func (c publicServerContext) handleV1SearchPhotos(w http.ResponseWriter, r *http
 
 	res, err := c.search(req.Query, limit, req.Offset, req.Filter)
 	if nil != err {
-		w.WriteHeader(500)
-		json.NewEncoder(w).Encode(err)
+		if errors.Is(err, EmbeddingServerUnavailable) {
+			w.WriteHeader(503)
+			json.NewEncoder(w).Encode(map[string]any{
+				"error":   "embedding_server_unavailable",
+				"message": err.Error(),
+			})
+		} else {
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(err)
+		}
 	} else {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(res)

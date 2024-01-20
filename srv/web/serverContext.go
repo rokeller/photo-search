@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/golang/glog"
@@ -32,6 +33,10 @@ const (
 	EXIF_CAMERA_MAKE  = "Make"
 	EXIF_CAMERA_Model = "Model"
 	EXIF_ORIENTATION  = "Orientation"
+)
+
+var (
+	EmbeddingServerUnavailable = errors.New("embedding server unavailable")
 )
 
 type serverContext struct {
@@ -346,6 +351,10 @@ func (c *serverContext) getEmbedding(query string) ([]float32, error) {
 
 	resp, err := client.Do(req)
 	if nil != err {
+		if errors.Is(err, syscall.ECONNREFUSED) {
+			return nil, EmbeddingServerUnavailable
+		}
+
 		glog.Errorf("Failed to retrieve embedding for '%s': %v", query, err)
 		return nil, err
 	}
