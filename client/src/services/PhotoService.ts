@@ -1,5 +1,6 @@
 import { InteractionRequiredAuthError, PublicClientApplication } from '@azure/msal-browser';
 import { getMsalConfig, getRequest } from './AuthConfig';
+import { EmbeddingServerUnavailable, ErrorCodes, ErrorResponse } from './Errors';
 
 interface QueryPhotosRequest {
     query: string;
@@ -131,9 +132,25 @@ class PhotoServiceImpl {
             body: JSON.stringify({ query, limit, offset, filter: this.filter, })
         });
 
-        const result = (await resp.json()) as PhotoResultsResponse;
+        switch (resp.status) {
+            case 200:
+                return (await resp.json()) as PhotoResultsResponse;
 
-        return result;
+            case 503:
+                {
+                    const err = (await resp.json()) as ErrorResponse;
+                    switch (err.error) {
+                        case ErrorCodes.EmbeddingServerUnavailable:
+                            throw new EmbeddingServerUnavailable();
+
+                        default:
+                            throw new Error('unknown error 503: ' + err.error);
+                    }
+                }
+
+            default:
+                throw new Error('unknown error: ' + resp.status);
+        }
     }
 
     public async recommend({ photoId, limit, offset }: RecommendSimilarPhotosRequest) {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { PhotoContainer } from '.';
-import { PhotoResultItem, PhotoResultsResponse, PhotoService } from '../services';
+import { PhotoResultItem, PhotoResultsResponse, PhotoService, isErrorResponse } from '../services';
 
 const LIMIT = 12;
 type RetrieveFn<T> = (props: T, offset?: number) => Promise<PhotoResultsResponse>;
@@ -79,8 +80,29 @@ interface RecommendProps {
     photoId: string;
 }
 
-function searchPhotos({ query }: SearchProps, offset?: number) {
-    return PhotoService.search({ query, offset, limit: LIMIT });
+interface SearchErrorProps {
+    error: unknown;
+}
+
+function SearchError({ error }: SearchErrorProps) {
+    const errorCode = isErrorResponse(error) ? error.error : undefined;
+    return <>
+        <strong>Search is not available right now.</strong>
+        <div>
+            Please try again later, or report this issue to your
+            administrator.
+        </div>
+        <div>Error code: {errorCode}</div>
+    </>;
+}
+
+async function searchPhotos({ query }: SearchProps, offset?: number): Promise<PhotoResultsResponse> {
+    try {
+        return await PhotoService.search({ query, offset, limit: LIMIT });
+    } catch (e) {
+        toast.error(<SearchError error={e} />);
+        return { items: [] };
+    }
 }
 
 function recommendPhotos({ photoId }: RecommendProps, offset?: number) {
