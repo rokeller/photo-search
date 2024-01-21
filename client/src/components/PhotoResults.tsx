@@ -80,14 +80,26 @@ interface RecommendProps {
     photoId: string;
 }
 
-interface SearchErrorProps {
+interface ErrorProps {
     error: unknown;
 }
 
-function SearchError({ error }: SearchErrorProps) {
+function SearchError({ error }: ErrorProps) {
     const errorCode = isErrorResponse(error) ? error.code : undefined;
     return <>
         <strong>Search is not available right now.</strong>
+        <div>
+            Please try again later, or report this issue to your
+            administrator.
+        </div>
+        <div>Error: <code>{errorCode}</code></div>
+    </>;
+}
+
+function RecommendError({ error }: ErrorProps) {
+    const errorCode = isErrorResponse(error) ? error.code : undefined;
+    return <>
+        <strong>Recommendations are not available right now.</strong>
         <div>
             Please try again later, or report this issue to your
             administrator.
@@ -105,8 +117,13 @@ async function searchPhotos({ query }: SearchProps, offset?: number): Promise<Ph
     }
 }
 
-function recommendPhotos({ photoId }: RecommendProps, offset?: number) {
-    return PhotoService.recommend({ photoId, offset, limit: LIMIT });
+async function recommendPhotos({ photoId }: RecommendProps, offset?: number): Promise<PhotoResultsResponse> {
+    try {
+        return await PhotoService.recommend({ photoId, offset, limit: LIMIT });
+    } catch (e) {
+        toast.error(<RecommendError error={e} />);
+        return { items: [] };
+    }
 }
 
 export const SearchPhotoResults = PhotoResultsFactory<SearchProps>(searchPhotos);
