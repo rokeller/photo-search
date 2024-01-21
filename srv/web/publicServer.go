@@ -88,12 +88,15 @@ func (c publicServerContext) handleV1SearchPhotos(w http.ResponseWriter, r *http
 
 	res, err := c.search(req.Query, limit, req.Offset, req.Filter)
 	if nil != err {
-		if errors.Is(err, EmbeddingServerUnavailable) {
-			w.WriteHeader(503)
-			json.NewEncoder(w).Encode(map[string]any{
-				"error":   "embedding_server_unavailable",
-				"message": err.Error(),
-			})
+		var pserr *photoSearchError
+		if errors.As(err, &pserr) {
+			if pserr.recoverable {
+				w.WriteHeader(503)
+			} else {
+				w.WriteHeader(500)
+			}
+
+			pserr.WriteJson(w)
 		} else {
 			w.WriteHeader(500)
 			json.NewEncoder(w).Encode(err)

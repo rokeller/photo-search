@@ -35,10 +35,6 @@ const (
 	EXIF_ORIENTATION  = "Orientation"
 )
 
-var (
-	EmbeddingServerUnavailable = errors.New("embedding server unavailable")
-)
-
 type serverContext struct {
 	conn                     *grpc.ClientConn
 	coll                     string
@@ -260,8 +256,16 @@ func (c *serverContext) search(
 		},
 	})
 	if nil != err {
-		glog.Errorf("Failed to search for vector: %v", err)
-		return nil, err
+		code := status.Code(err)
+		glog.Errorf("Failed to search for vector: %v; code: %v", err, code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return nil, VectorDatabaseUnavailable
+
+		default:
+			return nil, err
+		}
 	}
 
 	return makePhotoResultsResponse(r.Result), nil
