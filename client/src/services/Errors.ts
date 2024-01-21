@@ -1,18 +1,22 @@
 export interface ErrorResponse {
-    // The error code string.
-    error: ErrorCodes;
+    code: ErrorCodes;
+    message: string;
 }
 
 export function isErrorResponse(obj: unknown): obj is ErrorResponse {
     const errResp = obj as ErrorResponse;
-    return (errResp)?.error !== undefined && typeof errResp.error === "string";
+    return (errResp)?.code !== undefined 
+        && typeof errResp.code === 'string'
+        && typeof errResp.message === 'string';
 }
 
 export enum ErrorCodes {
     EmbeddingServerUnavailable = 'embedding_server_unavailable',
+    VectorDatabaseUnavailable = 'vector_database_unavailable',
 }
 
-export class EmbeddingServerUnavailable extends Error implements ErrorResponse {
-    name = 'EmbeddingServerUnavailable';
-    error = ErrorCodes.EmbeddingServerUnavailable;
+export class PhotoSearchError extends Error implements ErrorResponse {
+    constructor(public readonly code: ErrorCodes, public readonly message: string) {
+        super(message);
+    }
 }

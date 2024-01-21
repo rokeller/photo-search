@@ -1,4 +1,4 @@
-export { EmbeddingServerUnavailable, isErrorResponse } from './Errors';
+export { PhotoSearchError, isErrorResponse } from './Errors';
 export type { ErrorResponse } from './Errors';
 export { PhotoService } from './PhotoService';
 export type {

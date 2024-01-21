@@ -85,14 +85,14 @@ interface SearchErrorProps {
 }
 
 function SearchError({ error }: SearchErrorProps) {
-    const errorCode = isErrorResponse(error) ? error.error : undefined;
+    const errorCode = isErrorResponse(error) ? error.code : undefined;
     return <>
         <strong>Search is not available right now.</strong>
         <div>
             Please try again later, or report this issue to your
             administrator.
         </div>
-        <div>Error code: {errorCode}</div>
+        <div>Error: <code>{errorCode}</code></div>
     </>;
 }
 
