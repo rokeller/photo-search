@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { PhotoContainer } from '.';
-import { PhotoResultItem, PhotoResultsResponse, PhotoService } from '../services';
+import { PhotoResultItem, PhotoResultsResponse, PhotoService, isErrorResponse } from '../services';
 
 const LIMIT = 12;
 type RetrieveFn<T> = (props: T, offset?: number) => Promise<PhotoResultsResponse>;
@@ -79,12 +80,50 @@ interface RecommendProps {
     photoId: string;
 }
 
-function searchPhotos({ query }: SearchProps, offset?: number) {
-    return PhotoService.search({ query, offset, limit: LIMIT });
+interface ErrorProps {
+    error: unknown;
 }
 
-function recommendPhotos({ photoId }: RecommendProps, offset?: number) {
-    return PhotoService.recommend({ photoId, offset, limit: LIMIT });
+function SearchError({ error }: ErrorProps) {
+    const errorCode = isErrorResponse(error) ? error.code : undefined;
+    return <>
+        <strong>Search is not available right now.</strong>
+        <div>
+            Please try again later, or report this issue to your
+            administrator.
+        </div>
+        <div>Error: <code>{errorCode}</code></div>
+    </>;
+}
+
+function RecommendError({ error }: ErrorProps) {
+    const errorCode = isErrorResponse(error) ? error.code : undefined;
+    return <>
+        <strong>Recommendations are not available right now.</strong>
+        <div>
+            Please try again later, or report this issue to your
+            administrator.
+        </div>
+        <div>Error: <code>{errorCode}</code></div>
+    </>;
+}
+
+async function searchPhotos({ query }: SearchProps, offset?: number): Promise<PhotoResultsResponse> {
+    try {
+        return await PhotoService.search({ query, offset, limit: LIMIT });
+    } catch (e) {
+        toast.error(<SearchError error={e} />);
+        return { items: [] };
+    }
+}
+
+async function recommendPhotos({ photoId }: RecommendProps, offset?: number): Promise<PhotoResultsResponse> {
+    try {
+        return await PhotoService.recommend({ photoId, offset, limit: LIMIT });
+    } catch (e) {
+        toast.error(<RecommendError error={e} />);
+        return { items: [] };
+    }
 }
 
 export const SearchPhotoResults = PhotoResultsFactory<SearchProps>(searchPhotos);

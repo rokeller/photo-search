@@ -67,10 +67,18 @@ button:focus-visible {
     right: 0;
 }
 
-.perfect-center {
+.perfect-center,
+.parent-perfect-center {
     display: flex;
-    min-height: 100vh;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.perfect-center {
+    min-height: 100vh;
+}
+
+.parent-perfect-center {
+    min-height: 100%;
 }

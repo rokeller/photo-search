@@ -1,5 +1,6 @@
 import { InteractionRequiredAuthError, PublicClientApplication } from '@azure/msal-browser';
 import { getMsalConfig, getRequest } from './AuthConfig';
+import { PhotoSearchError, isErrorResponse } from './Errors';
 
 interface QueryPhotosRequest {
     query: string;
@@ -131,9 +132,11 @@ class PhotoServiceImpl {
             body: JSON.stringify({ query, limit, offset, filter: this.filter, })
         });
 
-        const result = (await resp.json()) as PhotoResultsResponse;
+        async function extractContent(resp: Response) {
+            return (await resp.json()) as PhotoResultsResponse;
+        }
 
-        return result;
+        return await this.handleResponseErrors(resp, extractContent);
     }
 
     public async recommend({ photoId, limit, offset }: RecommendSimilarPhotosRequest) {
@@ -145,9 +148,11 @@ class PhotoServiceImpl {
             body: JSON.stringify({ id: photoId, limit, offset, filter: this.filter, })
         });
 
-        const result = (await resp.json()) as PhotoResultsResponse;
+        async function extractContent(resp: Response) {
+            return (await resp.json()) as PhotoResultsResponse;
+        }
 
-        return result;
+        return await this.handleResponseErrors(resp, extractContent);
     }
 
     public getPhotoSrc(id: string, width?: number) {
@@ -162,9 +167,13 @@ class PhotoServiceImpl {
     public async getPhoto(id: string, width?: number) {
         const url = this.getPhotoSrc(id, width);
         const resp = await this.fetch(url);
-        const blob = await resp.blob();
 
-        return URL.createObjectURL(blob);
+        async function extractContent(resp: Response) {
+            const blob = await resp.blob();
+            return URL.createObjectURL(blob);
+        }
+
+        return await this.handleResponseErrors(resp, extractContent);
     }
 
     public async getMsalInstance() {
@@ -204,6 +213,36 @@ class PhotoServiceImpl {
         }
 
         return headers;
+    }
+
+    private async handleResponseErrors<TResponse>(
+        resp: Response,
+        extractContent: (resp: Response) => Promise<TResponse>
+    ): Promise<TResponse> {
+        switch (resp.status) {
+            case 200:
+                return extractContent(resp);
+
+            case 500:
+                {
+                    const err = (await resp.text());
+                    throw new Error('request failed (status 500): ' + err);
+                }
+
+            case 503:
+                {
+                    const err = (await resp.json());
+                    if (isErrorResponse(err)) {
+                        throw new PhotoSearchError(err.code, err.message);
+                    } else {
+                        throw new Error('request failed (status 503): ' + err.error);
+                    }
+                }
+
+            default:
+                throw new Error('unknown error: ' + resp.status);
+        }
+
     }
 }
 

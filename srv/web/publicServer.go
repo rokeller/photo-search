@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -87,8 +88,7 @@ func (c publicServerContext) handleV1SearchPhotos(w http.ResponseWriter, r *http
 
 	res, err := c.search(req.Query, limit, req.Offset, req.Filter)
 	if nil != err {
-		w.WriteHeader(500)
-		json.NewEncoder(w).Encode(err)
+		c.respondForError(err, w)
 	} else {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(res)
@@ -108,8 +108,7 @@ func (c publicServerContext) handleV1RecommendPhotos(w http.ResponseWriter, r *h
 
 	res, err := c.recommend(req.Id, limit, req.Offset, req.Filter)
 	if nil != err {
-		w.WriteHeader(500)
-		json.NewEncoder(w).Encode(err)
+		c.respondForError(err, w)
 	} else {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(res)
@@ -122,7 +121,7 @@ func (c publicServerContext) handleV1PhotosGetById(w http.ResponseWriter, r *htt
 
 	payload, err := c.getPayloadById(id)
 	if nil != err {
-		w.WriteHeader(500)
+		c.respondForError(err, w)
 	} else {
 		relPath := getPathFromPayload(payload)
 		absPath := path.Join(c.photosRootDir, *relPath)
@@ -143,7 +142,7 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 
 	payload, err := c.getPayloadById(id)
 	if nil != err {
-		w.WriteHeader(500)
+		c.respondForError(err, w)
 		return
 	}
 
@@ -168,6 +167,23 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 	w.Header().Add("content-type", "image/jpeg")
 
 	jpeg.Encode(w, image, &jpeg.Options{Quality: 66})
+}
+
+func (c publicServerContext) respondForError(err error, w http.ResponseWriter) {
+	var pserr *photoSearchError
+
+	if errors.As(err, &pserr) {
+		if pserr.recoverable {
+			w.WriteHeader(503)
+		} else {
+			w.WriteHeader(500)
+		}
+
+		pserr.WriteJson(w)
+	} else {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(err)
+	}
 }
 
 func resizeImage(path string, newWidth int) (image.Image, error) {

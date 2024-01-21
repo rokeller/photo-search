@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/golang/glog"
@@ -89,11 +90,18 @@ func (c *serverContext) ensureCollection() (*serverContext, error) {
 	_, err := client.Get(ctx,
 		&pb.GetCollectionInfoRequest{CollectionName: c.coll})
 	if nil != err {
-		if codes.NotFound == status.Code(err) {
+		code := status.Code(err)
+
+		switch code {
+		case codes.NotFound:
 			return c.createCollection()
-		} else {
-			defer c.conn.Close()
-			glog.Errorf("Failed to get collection details for '%s': %v", c.coll, err)
+
+		case codes.Unavailable, codes.DeadlineExceeded:
+			glog.Errorf("Vector database is unavailable: %v; grpc code = %v", err, code)
+			return nil, VectorDatabaseUnavailable
+
+		default:
+			glog.Errorf("Failed to get collection details for '%s': %v; grpc code = %v", c.coll, err, code)
 			return nil, err
 		}
 	}
@@ -181,8 +189,16 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 		Points:         points,
 	})
 	if nil != err {
-		glog.Errorf("Failed to upsert points: %v", err)
-		return err
+		code := status.Code(err)
+		glog.Errorf("Failed to upsert points: %v; grpc code: %v", err, code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return VectorDatabaseUnavailable
+
+		default:
+			return err
+		}
 	}
 
 	return nil
@@ -213,8 +229,16 @@ func (c *serverContext) delete(items []string) error {
 		},
 	})
 	if nil != err {
-		glog.Errorf("Failed to delete points: %v", err)
-		return err
+		code := status.Code(err)
+		glog.Errorf("Failed to delete points: %v; grpc code: %v", err, code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return VectorDatabaseUnavailable
+
+		default:
+			return err
+		}
 	}
 
 	return nil
@@ -255,8 +279,16 @@ func (c *serverContext) search(
 		},
 	})
 	if nil != err {
-		glog.Errorf("Failed to search for vector: %v", err)
-		return nil, err
+		code := status.Code(err)
+		glog.Errorf("Failed to search vectors: %v; grpc code: %v", err, code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return nil, VectorDatabaseUnavailable
+
+		default:
+			return nil, err
+		}
 	}
 
 	return makePhotoResultsResponse(r.Result), nil
@@ -295,8 +327,17 @@ func (c *serverContext) recommend(
 		},
 	})
 	if nil != err {
-		glog.Errorf("Failed to recomment similar for '%s': %v", id, err)
-		return nil, err
+		code := status.Code(err)
+		glog.Errorf("Failed to recommend similar for '%s': %v; grpc code: %v",
+			id, err, code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return nil, VectorDatabaseUnavailable
+
+		default:
+			return nil, err
+		}
 	}
 
 	return makePhotoResultsResponse(r.Result), nil
@@ -319,8 +360,17 @@ func (c *serverContext) getPayloadById(id string) (map[string]*pb.Value, error) 
 		},
 	})
 	if nil != err {
-		glog.Errorf("Failed to get point details for '%s': %v", id, err)
-		return nil, err
+		code := status.Code(err)
+		glog.Errorf("Failed to get point details for '%s': %v; grpc code: %v",
+			id, err, code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return nil, VectorDatabaseUnavailable
+
+		default:
+			return nil, err
+		}
 	}
 
 	return r.Result[0].Payload, nil
@@ -346,6 +396,10 @@ func (c *serverContext) getEmbedding(query string) ([]float32, error) {
 
 	resp, err := client.Do(req)
 	if nil != err {
+		if errors.Is(err, syscall.ECONNREFUSED) {
+			return nil, EmbeddingServerUnavailable
+		}
+
 		glog.Errorf("Failed to retrieve embedding for '%s': %v", query, err)
 		return nil, err
 	}
