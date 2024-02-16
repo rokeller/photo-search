@@ -8,7 +8,7 @@ require (
 	github.com/golang/glog v1.2.0 // direct
 	github.com/gorilla/mux v1.8.1 // direct
 	github.com/qdrant/go-client v1.7.0 // direct
-	google.golang.org/grpc v1.61.0 // direct
+	google.golang.org/grpc v1.61.1 // direct
 )
 
 require gopkg.in/yaml.v3 v3.0.1
