@@ -3,7 +3,7 @@ module github.com/rokeller/photo-search/srv/web
 go 1.21.4
 
 require (
-	github.com/coreos/go-oidc/v3 v3.9.0
+	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/disintegration/imaging v1.6.2 // direct
 	github.com/golang/glog v1.2.0 // direct
 	github.com/gorilla/mux v1.8.1 // direct
@@ -14,7 +14,7 @@ require (
 require gopkg.in/yaml.v3 v3.0.1
 
 require (
-	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/image v0.15.0 // indirect
