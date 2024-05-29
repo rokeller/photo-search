@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@azure/msal-browser": "^3.13.0",
+    "@azure/msal-browser": "^3.15.0",
     "@azure/msal-react": "^2.0.9",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
