@@ -14,14 +14,14 @@
     "@azure/msal-react": "^2.0.9",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
-    "react-dom": "^18.2.0",
+    "react-dom": "^18.3.1",
     "react-layout-masonry": "^1.1.0",
     "react-router-dom": "^6.23.1",
     "react-toastify": "^10.0.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.2",
-    "@types/react-dom": "^18.2.25",
+    "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.2.1",
