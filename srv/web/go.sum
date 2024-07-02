@@ -79,8 +79,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 h1:o4JXh1EVt9k/+g42oCprj/FisM4qX9L3sZB3upGN2ZU=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=
-github.com/qdrant/go-client v1.9.0 h1:2zdZVMHK4Dum5yMVzzml6UIQQUbk5O1VKRD8/2C6YCw=
-github.com/qdrant/go-client v1.9.0/go.mod h1:j+OVRsJIZhOSRK2toPl8tTBOhwr4AxXCz9RACzv0JB4=
+github.com/qdrant/go-client v1.10.0 h1:6GRi78TpZTvVo3yViXK4Re8khvi9GUYyNBPiG5zVpP0=
+github.com/qdrant/go-client v1.10.0/go.mod h1:j+OVRsJIZhOSRK2toPl8tTBOhwr4AxXCz9RACzv0JB4=
 github.com/shirou/gopsutil/v3 v3.24.2 h1:kcR0erMbLg5/3LcInpw0X/rrPSqq4CDPyI6A6ZRC18Y=
 github.com/shirou/gopsutil/v3 v3.24.2/go.mod h1:tSg/594BcA+8UdQU2XcW803GWYgdtauFFPgJCJKZlVk=
 github.com/shoenig/go-m1cpu v0.1.6 h1:nxdKQNcEB6vzgA2E2bvzKIYRuNj7XNJ4S/aRSwKzFtM=
