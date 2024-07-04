@@ -1,6 +1,6 @@
 import faviconUrl from '../assets/favicon-96.png';
 import { LogoutButton, PhotoFilterControls, SearchBox } from '../components';
-import './Home.css';
+import './Home.scss';
 
 export function Home() {
     return <div className='welcome perfect-center'>
