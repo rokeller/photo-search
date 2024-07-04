@@ -1,5 +1,5 @@
 import { PhotoResultItem } from '../services';
-import './PhotoWithRetry.css';
+import './PhotoWithRetry.scss';
 
 interface PhotoWithRetryProps {
     details?: PhotoResultItem;

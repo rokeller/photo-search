@@ -40,19 +40,19 @@ export function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
     }, [details]);
 
     return <>
-        <PhotoWithRetry details={details} photoUrl={photoUrl} onClick={onView} onRetry={loadPhoto} />
-        <div className='legend'>
+        <div className='photo'>
+            <PhotoWithRetry details={details} photoUrl={photoUrl} onClick={onView} onRetry={loadPhoto} />
             <div className='index'>{resultIndex + 1}</div>
-            <div className='metadata'>
-                <div className='path'>📂 {details.path}</div>
-                {
-                    timestamp ?
-                        <PhotoTimestamp timestamp={timestamp} dateOnly={isMidnight(timestamp)} /> :
-                        <></>
-                }
-            </div>
             <div className='similar pointer' title='Show similar'
                 onClick={() => navigate('/photos/similar/' + encodeURI(details.id))}>💫</div>
+        </div>
+        <div className='legend'>
+            <div className='path' title={details.path}>📂 {details.path}</div>
+            {
+                timestamp ?
+                    <PhotoTimestamp timestamp={timestamp} dateOnly={isMidnight(timestamp)} /> :
+                    <></>
+            }
         </div>
     </>
 }
