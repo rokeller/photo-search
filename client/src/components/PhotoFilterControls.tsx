@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FilterSettings } from '.';
 import { PhotoService } from '../services';
-import './PhotoFilterControls.css';
+import './PhotoFilterControls.scss';
 
 export function PhotoFilterControls() {
     const [showFilter, setShowFilter] = useState<boolean>();

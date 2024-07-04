@@ -1,6 +1,6 @@
 import { IPublicClientApplication } from '@azure/msal-browser';
 import { useMsal } from '@azure/msal-react';
-import './LogoutButton.css';
+import './LogoutButton.scss';
 
 async function handleLogout(instance: IPublicClientApplication) {
 

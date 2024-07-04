@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './SearchBox.css';
+import './SearchBox.scss';
 
 export interface SearchBoxProps {
     query?: string;
