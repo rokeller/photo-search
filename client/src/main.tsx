@@ -3,7 +3,7 @@ import { MsalProvider } from '@azure/msal-react'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import './index.css'
+import './index.scss'
 import { PhotoService } from './services/PhotoService.ts'
 
 // eslint-disable-next-line react-refresh/only-export-components
