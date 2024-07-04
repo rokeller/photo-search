@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Masonry from 'react-layout-masonry';
 import { PhotoTile, ViewPhoto } from '.';
 import { PhotoResultItem } from '../services';
-import './PhotoContainer.css';
+import './PhotoContainer.scss'
 
 interface PhotoContainerProps {
     photos?: Array<PhotoResultItem>;
