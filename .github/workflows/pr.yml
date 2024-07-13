@@ -7,7 +7,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTUP_TOOLCHAIN: stable
-  CARGO_BUILD_TARGET: x86_64-unknown-linux-musl
+  RUST_FINAL_TARGET: x86_64-unknown-linux-musl
 
 jobs:
   build-test:
@@ -47,9 +47,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Build Rust
+      - name: Setup Rust
         run: |
             rustup update ${{ env.RUSTUP_TOOLCHAIN }}
             rustup default ${{ env.RUSTUP_TOOLCHAIN }}
-            rustup target add ${{ env.CARGO_BUILD_TARGET }} --toolchain ${{ env.RUSTUP_TOOLCHAIN }}
+            cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build Rust
+        run: |
+            echo "*** Build for runner OS target"
             cargo build --verbose
+
+            echo "*** Build for ${{ env.RUST_FINAL_TARGET }}"
+            cross build --target ${{ env.RUST_FINAL_TARGET }}
