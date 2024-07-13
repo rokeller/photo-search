@@ -3,9 +3,13 @@
 GitHub Release:
 [![GitHub Release](https://img.shields.io/github/v/release/rokeller/photo-search)](https://github.com/rokeller/photo-search/releases/latest)
 
-Docker:
-[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rokeller/photo-search)](https://hub.docker.com/r/rokeller/photo-search)
-[![Docker Image Size with architecture (latest by date/latest semver)](https://img.shields.io/docker/image-size/rokeller/photo-search)](https://hub.docker.com/r/rokeller/photo-search)
+Container images:
+[![Web Docker Image Version](https://img.shields.io/docker/v/rokeller/photo-search?label=photo-search)](https://hub.docker.com/r/rokeller/photo-search)
+[![Web Docker Image Size](https://img.shields.io/docker/image-size/rokeller/photo-search?label=photo-search)](https://hub.docker.com/r/rokeller/photo-search)
+
+[![Embeddings Docker Image Version](https://img.shields.io/docker/v/rokeller/photo-search-embedding?label=photo-search-embedding)](https://hub.docker.com/r/rokeller/photo-search-embedding)
+[![Embeddings Docker Image Size](https://img.shields.io/docker/image-size/rokeller/photo-search-embedding?label=photo-search-embedding)](https://hub.docker.com/r/rokeller/photo-search-embedding)
+
 
 This repository holds everything needed to run a browser GUI offering semantic
 search for your own photos.
@@ -18,11 +22,14 @@ Photo Search comes with a few separate components.
   that calculates vector embeddings for photos and sends these embeddings to an
   _indexing server_. This is designed to be run directly on a machine with decent
   hardware (and a GPU) to get fast indexing.
-* A minimal _embedding server script_ ([`embeddings/server.py`](embeddings/server.py))
-  that calculates vector embeddings for multi-lingual natural language queries
-  such that these queries can be matched with embeddings calculated for photos.
-  This is designed to be run directly on a machine with decent hardware (and a
-  GPU) to get fast embedding creation.
+* A minimal _embedding server_ ([`srv/embeddings/`](srv/embeddings/)) written in
+  Rust that calculates vector embeddings for multi-lingual natural language
+  queries such that these queries can be matched with embeddings calculated for
+  photos. This is designed to be run inside a Kubernetes cluster or even as a
+  container right next to the below web server. This server replaces the old
+  Python-based embedding server to reduce the memory footprint. Initial tests
+  show a memory footprint of about 40% of that of the Python-based embedding
+  server.
 * An executable _web server_ ([`srv/web/`](srv/web/)) written in go that offers
   HTTP endpoints for the above mentioned _indexing server_ as well as endpoints
   to search and retrieve photos from the browser GUI. This is designed to be
@@ -56,21 +63,32 @@ cd .models
 ./download.sh
 ```
 
-You can run the _embedding server_ using the [embeddings/server.sh](embeddings/server.sh)
-helper script as follows (example):
+You can run the _embedding server_ for example using the
+[`photo-search-embedding` container image](https://hub.docker.com/r/rokeller/photo-search-embedding)
+as follows (example):
 
 ```bash
-embeddings/server.sh
-# or to run in the background, for example
-nohup embeddings/server.sh &
+embeddings --model-path /mnt/path-to/clip-ViT-B-32-multilingual-v1 \
+    --binding 127.0.0.1:8082
 ```
 
-Run the _web server_ as follows (example):
+Please note that the only files from the
+[`clip-ViT-B-32-multilingual-v1` Model](https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1)
+that are actually needed by the embedding server are:
+
+* `./config.json`
+* `./tokenizer.json`
+* `./model.safetensors`
+* `./2_Dense/model.safetensors`
+
+Run the _web server_ for example using the
+[`photo-search` container image](https://hub.docker.com/r/rokeller/photo-search)
+as follows (example):
 
 ```bash
 web --qdrant-addr=qdrant-photos:6334 \
     --qdrant-coll=my-photos \
-    --mbed=http://gpu-host:8082/ \
+    --mbed=http://host-running-embedding-server:8082/ \
     --photos=/mnt/nfs/photos
 ```
 
@@ -155,7 +173,7 @@ by passing the following flags:
 
 #### Embeddings Server
 
-The embeddings server is needed to create embeddings for textual queries on your
+The embedding server is needed to create embeddings for textual queries on your
 photos. To let the Photo Search web server know how to connect to this (internal)
 service, the `--mbed=<base-url>` flag must be set. The default value is
 `http://localhost:8082/`.
