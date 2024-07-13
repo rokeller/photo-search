@@ -8,4 +8,7 @@ node_modules/
 dist/
 web
 
+target/
+!target/x86_64-unknown-linux-musl/release/embeddings
+
 .checkpoint
