@@ -49,14 +49,14 @@ jobs:
 
       - name: Setup Rust
         run: |
-            rustup update ${{ env.RUSTUP_TOOLCHAIN }}
-            rustup default ${{ env.RUSTUP_TOOLCHAIN }}
-            cargo install cross --git https://github.com/cross-rs/cross
+          rustup update ${{ env.RUSTUP_TOOLCHAIN }}
+          rustup default ${{ env.RUSTUP_TOOLCHAIN }}
+          cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build Rust
         run: |
-            echo "*** Build for runner OS target"
-            cargo build --verbose
+          echo "*** Build for runner OS target"
+          cargo build --verbose
 
-            echo "*** Build for ${{ env.RUST_FINAL_TARGET }}"
-            cross build --target ${{ env.RUST_FINAL_TARGET }}
+          echo "*** Build for ${{ env.RUST_FINAL_TARGET }}"
+          cross build --target ${{ env.RUST_FINAL_TARGET }}
