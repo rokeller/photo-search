@@ -10,7 +10,7 @@ require (
 	github.com/golang/glog v1.2.2 // direct
 	github.com/gorilla/mux v1.8.1 // direct
 	github.com/qdrant/go-client v1.11.1 // direct
-	google.golang.org/grpc v1.66.2 // direct
+	google.golang.org/grpc v1.67.0 // direct
 )
 
 require gopkg.in/yaml.v3 v3.0.1
@@ -20,7 +20,7 @@ require (
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
