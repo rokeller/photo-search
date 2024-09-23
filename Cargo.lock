@@ -216,12 +216,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "candle-core"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f81301f3a38fd17d1dd52479f01c2217ad77ae9a53e07f4db43fccba2db8a4d0"
+dependencies = [
+ "byteorder",
+ "gemm",
+ "half",
+ "memmap2",
+ "num-traits",
+ "num_cpus",
+ "rand",
+ "rand_distr",
+ "rayon",
+ "safetensors",
+ "thiserror",
+ "yoke",
+ "zip",
+]
+
+[[package]]
 name = "candle-nn"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b006b30f66a0d94fc9cef0ac4de6ce510565f35ae2c6c35ce5d4aacfb0fc8eeb"
 dependencies = [
- "candle-core",
+ "candle-core 0.6.0",
  "half",
  "num-traits",
  "rayon",
@@ -237,7 +258,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f0d4eb6a0d9279d5829b06b2bf3caa117904eefd6dcf879d16e687c4a84034c"
 dependencies = [
  "byteorder",
- "candle-core",
+ "candle-core 0.6.0",
  "candle-nn",
  "fancy-regex",
  "num-traits",
@@ -491,7 +512,7 @@ name = "embeddings"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "candle-core",
+ "candle-core 0.7.0",
  "candle-nn",
  "candle-transformers",
  "clap",
