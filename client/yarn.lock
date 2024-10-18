@@ -15,10 +15,10 @@
     "@jridgewell/gen-mapping" "^0.3.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@azure/msal-browser@^3.24.0":
-  version "3.24.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-3.24.0.tgz#3208047672d0b0c943b0bef5f995d510d6582ae4"
-  integrity sha512-JGNV9hTYAa7lsum9IMIibn2kKczAojNihGo1hi7pG0kNrcKej530Fl6jxwM05A44/6I079CSn6WxYxbVhKUmWg==
+"@azure/msal-browser@^3.26.1":
+  version "3.26.1"
+  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-3.26.1.tgz#2f4368d7997682db30dca52e32fcac363fa0efad"
+  integrity sha512-y78sr9g61aCAH9fcLO1um+oHFXc1/5Ap88RIsUSuzkm0BHzFnN+PXGaQeuM1h5Qf5dTnWNOd6JqkskkMPAhh7Q==
   dependencies:
     "@azure/msal-common" "14.15.0"
 
