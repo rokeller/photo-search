@@ -1,7 +1,8 @@
 module github.com/rokeller/photo-search/srv/web
 
-go 1.22.2
-toolchain go1.23.1
+go 1.22.7
+
+toolchain go1.23.3
 
 require (
 	github.com/coreos/go-oidc/v3 v3.11.0
