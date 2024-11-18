@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = { version = "1.0.93", features = ["backtrace"] }
 candle-core = "0.7.2"
-candle-nn = "0.7.2"
+candle-nn = "0.8.0"
 candle-transformers = "0.7.2"
 clap = { version = "4.5.20", features = ["derive"] }
 serde = { version = "1.0.215", features = ["derive"] }
