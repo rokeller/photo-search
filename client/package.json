@@ -15,7 +15,7 @@
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-layout-masonry": "^1.1.0",
+    "react-layout-masonry": "^1.2.0",
     "react-router-dom": "^6.28.0",
     "react-toastify": "^10.0.6"
   },
