@@ -1868,10 +1868,10 @@ react-is@^16.13.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-layout-masonry@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/react-layout-masonry/-/react-layout-masonry-1.1.0.tgz#261ffd151035296ddedcaf13e4a3f74c7fe21d8d"
-  integrity sha512-EVDj8ICCKiZIYAfdZZyuIHzYTTXcwWdLr9B6IB+vKBa39tpIjoTIhpgcLsxurrYy3+le6JXTsQIduS2/8MpmFQ==
+react-layout-masonry@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/react-layout-masonry/-/react-layout-masonry-1.2.0.tgz#675e4032c11715a5b47da2de8e5c59ba0fd72a12"
+  integrity sha512-Nauk/lE+1boEDFonOea6zWXq4QduCS3p+bOsH2iYVSqs5RBtn6yyeeJnPN++EAZsrUNT3Blvlac1CcoHlJ98Vg==
 
 react-refresh@^0.14.2:
   version "0.14.2"
