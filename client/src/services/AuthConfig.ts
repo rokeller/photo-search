@@ -23,7 +23,7 @@ export async function getMsalConfig() {
             protocolMode: 'OIDC',
         },
         cache: {
-            cacheLocation: BrowserCacheLocation.SessionStorage,
+            cacheLocation: BrowserCacheLocation.LocalStorage,
             claimsBasedCachingEnabled: true,
             storeAuthStateInCookie: true,
         }
