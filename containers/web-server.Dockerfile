@@ -24,7 +24,7 @@ RUN go mod download
 
 # Now let's build the web server binaries.
 COPY srv/web .
-RUN CGO_ENABLED=0 go build -a -ldflags '-s -a'
+RUN CGO_ENABLED=0 go build -a -ldflags '-s -w'
 
 # CA certs - we need a decent set of CA certificates so outgoing TLS channels
 # can successfully be established on the below image from scratch.
@@ -38,6 +38,6 @@ WORKDIR /app
 ENTRYPOINT [ "./web" ]
 EXPOSE 8080/tcp
 
-COPY --from=alpine /etc/ssl/certs /etc/ssl/certs
-COPY --from=server /src/web /app
-COPY --from=client /src/dist /app/dist
+COPY --link --from=alpine /etc/ssl/certs /etc/ssl/certs
+COPY --link --from=server /src/web /app
+COPY --link --from=client /src/dist /app/dist
