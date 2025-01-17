@@ -1,7 +1,6 @@
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements, useParams, useRouteError } from 'react-router-dom';
 import { Flip, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
 import { SearchPhotoResults, SimilarPhotoResults } from './components';
 import { MainLayout, PhotosLayout } from './layouts';

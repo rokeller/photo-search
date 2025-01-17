@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/golang/glog"
 )
@@ -42,7 +43,7 @@ func main() {
 	internalSrv := NewInternalServer(srv)
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Kill, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 
 	glog.Infof("Running public HTTP server at '%s' ...", publicSrv.Addr)
 	go serveHTTP(publicSrv)

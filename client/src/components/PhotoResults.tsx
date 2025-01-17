@@ -86,26 +86,30 @@ interface ErrorProps {
 
 function SearchError({ error }: ErrorProps) {
     const errorCode = isErrorResponse(error) ? error.code : undefined;
-    return <>
-        <strong>Search is not available right now.</strong>
+    return (
         <div>
-            Please try again later, or report this issue to your
-            administrator.
+            <strong>Search is not available right now.</strong>
+            <div>
+                Please try again later, or report this issue to your
+                administrator.
+            </div>
+            <div>Error: <code>{errorCode}</code></div>
         </div>
-        <div>Error: <code>{errorCode}</code></div>
-    </>;
+    );
 }
 
 function RecommendError({ error }: ErrorProps) {
     const errorCode = isErrorResponse(error) ? error.code : undefined;
-    return <>
-        <strong>Recommendations are not available right now.</strong>
+    return (
         <div>
-            Please try again later, or report this issue to your
-            administrator.
+            <strong>Recommendations are not available right now.</strong>
+            <div>
+                Please try again later, or report this issue to your
+                administrator.
+            </div>
+            <div>Error: <code>{errorCode}</code></div>
         </div>
-        <div>Error: <code>{errorCode}</code></div>
-    </>;
+    );
 }
 
 async function searchPhotos({ query }: SearchProps, offset?: number): Promise<PhotoResultsResponse> {
