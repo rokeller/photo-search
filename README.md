@@ -134,24 +134,23 @@ For example:
 #### Example: Microsoft Entra ID (v2)
 
 ```yaml
-clientId: 0f9ab9ed-c161-4dbf-a24a-82d3419426db
-authority: https://login.microsoftonline.com/domain.com/
-audience: api://photos.domain.com
-issuer: https://login.microsoftonline.com/0b3523d1-ae5d-48f1-b4ba-e655c4203de1/v2.0
+clientId: 4d868f99-2918-4470-a39b-1342548c50e4
+authority: https://login.microsoftonline.com/my-domain.com/
+audience: api://photos.my-domain.com
+issuer: https://login.microsoftonline.com/f432db16-a40f-4376-9920-65324b4a362f/v2.0
 scopes:
-  - api://photos.domain.com/Photos.Read
+  - api://photos.my-domain.com/Photos.Read
 ```
 
 #### Example: Microsoft Entra ID (v1)
 
 ```yaml
-clientId: 0f9ab9ed-c161-4dbf-a24a-82d3419426db
-authority: https://sts.windows.net/0b3523d1-ae5d-48f1-b4ba-e655c4203de1/
-blah: https://login.microsoftonline.com/oger.li/
-audience: api://0f9ab9ed-c161-4dbf-a24a-82d3419426db
-issuer: https://sts.windows.net/0b3523d1-ae5d-48f1-b4ba-e655c4203de1/
+clientId: 4d868f99-2918-4470-a39b-1342548c50e4
+authority: https://sts.windows.net/f432db16-a40f-4376-9920-65324b4a362f/
+audience: api://4d868f99-2918-4470-a39b-1342548c50e4
+issuer: https://sts.windows.net/f432db16-a40f-4376-9920-65324b4a362f/
 scopes:
-  - api://0f9ab9ed-c161-4dbf-a24a-82d3419426db/Photos.Read
+  - api://4d868f99-2918-4470-a39b-1342548c50e4/Photos.Read
 ```
 
 ### Runtime dependencies
