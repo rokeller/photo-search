@@ -510,28 +510,6 @@ func getTimestampFromPayload(payload map[string]*pb.Value) *int64 {
 	return &val
 }
 
-func getCameraFromPayload(payload map[string]*pb.Value) *string {
-	makeVal := getExifFieldFromPayload(payload, EXIF_CAMERA_MAKE)
-	modelVal := getExifFieldFromPayload(payload, EXIF_CAMERA_Model)
-
-	if nil == makeVal && nil == modelVal {
-		return nil
-	}
-
-	var result string
-	if nil != makeVal {
-		result = makeVal.GetStringValue()
-
-		if nil != modelVal {
-			result += fmt.Sprintf(" (%s)", modelVal.GetStringValue())
-		}
-	} else {
-		result = modelVal.GetStringValue()
-	}
-
-	return &result
-}
-
 func getOrientationFromPayload(payload map[string]*pb.Value) *int64 {
 	field := getExifFieldFromPayload(payload, EXIF_ORIENTATION)
 	if nil == field {
