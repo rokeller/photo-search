@@ -10,7 +10,7 @@ candle-nn = "0.8.2"
 candle-transformers = "0.8.2"
 clap = { version = "4.5.26", features = ["derive"] }
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.135"
+serde_json = "1.0.137"
 tokenizers = { version = "0.21.0", default-features = false, features = ["onig"] }
 tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
 warp = "0.3.7"
