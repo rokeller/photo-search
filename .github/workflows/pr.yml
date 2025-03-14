@@ -39,6 +39,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: 'srv/web/go.mod'
+          cache-dependency-path: |
+            srv/web/go.sum
 
       - name: Build Web Server
         run: go build -C srv/web
