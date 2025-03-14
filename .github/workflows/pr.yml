@@ -28,9 +28,9 @@ jobs:
 
       - name: Build Client
         run: |
-          yarn --cwd client install
-          yarn --cwd client lint
-          VITE_APP_VERSION=pull_request yarn --cwd client build
+          pnpm -C client install
+          pnpm -C client lint
+          VITE_APP_VERSION=pull_request pnpm -C client build
 
       - name: Build Web Server
         run: go build -C srv/web
