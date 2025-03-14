@@ -69,8 +69,5 @@ jobs:
 
       - name: Build Rust
         run: |
-          echo "*** Build for runner OS target"
-          cargo build
-
           echo "*** Build for ${{ env.RUST_FINAL_TARGET }}"
           cross build --target ${{ env.RUST_FINAL_TARGET }}
