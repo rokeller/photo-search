@@ -1,9 +1,9 @@
-name: Release
+name: Pre-release
 
 on:
   release:
     types:
-      - published
+      - prereleased
 
 env:
   FILE_OCI_WEB: web-server.tar

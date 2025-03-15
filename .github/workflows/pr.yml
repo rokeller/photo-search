@@ -10,9 +10,8 @@ env:
   RUST_FINAL_TARGET: x86_64-unknown-linux-musl
 
 jobs:
-  build-test:
+  build-test-node:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -25,19 +24,32 @@ jobs:
         with:
           version: 10
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'srv/web/go.mod'
-
       - name: Build Client
         run: |
           pnpm -C client install
           pnpm -C client lint
           VITE_APP_VERSION=pull_request pnpm -C client build
 
+  build-test-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'srv/web/go.mod'
+          cache-dependency-path: |
+            srv/web/go.sum
+
       - name: Build Web Server
         run: go build -C srv/web
+
+  build-test-rust:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -59,8 +71,5 @@ jobs:
 
       - name: Build Rust
         run: |
-          echo "*** Build for runner OS target"
-          cargo build
-
           echo "*** Build for ${{ env.RUST_FINAL_TARGET }}"
           cross build --target ${{ env.RUST_FINAL_TARGET }}
