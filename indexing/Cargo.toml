@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = { version = "1.0.86", features = ["backtrace"] }
-candle-core = "0.6.0"
-candle-nn = "0.6.0"
-candle-transformers = "0.6.0"
-clap = { version = "4.5.11", features = ["derive"] }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = "1.0.121"
+anyhow = { workspace = true, features = ["backtrace"] }
+candle-core = { workspace = true }
+candle-nn = { workspace = true }
+candle-transformers = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+image = { workspace = true, features = ["jpeg"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokenizers = { workspace = true, features = ["onig"] }

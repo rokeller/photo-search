@@ -10,5 +10,6 @@ web
 
 target/
 !target/x86_64-unknown-linux-musl/release/embeddings
+!target/x86_64-unknown-linux-musl/release/indexing
 
 .checkpoint
