@@ -10,7 +10,7 @@ the address (host name/IP and port) of qdrant the gRPC endpoint to the web
 server using the `--qdrant-addr` flag. For example:
 
 ```bash
-web --qdrant-addr photo-search-db:6334
+web --qdrant-addr photo-search:6334
 ```
 
 ## qdrant installation
@@ -23,5 +23,5 @@ Kubernetes cluster.
 helm repo add qdrant https://qdrant.github.io/qdrant-helm
 
 helm repo update
-helm upgrade -i photo-search-db qdrant/qdrant
+helm upgrade -i photo-search qdrant/qdrant
 ```
