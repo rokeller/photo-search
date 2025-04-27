@@ -5,4 +5,4 @@ WORKDIR /app
 ENTRYPOINT [ "./embeddings" ]
 EXPOSE 8082/tcp
 
-COPY target/x86_64-unknown-linux-musl/release/embeddings /app
+COPY --link target/x86_64-unknown-linux-musl/release/embeddings /app
