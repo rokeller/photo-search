@@ -4,6 +4,7 @@ use anyhow::Result;
 use candle_core::Device;
 use clap::Parser;
 use scan_dir::ScanDir;
+use serde::Deserialize;
 
 mod embedding;
 
@@ -18,43 +19,43 @@ struct Args {
     #[arg(
         short,
         long,
-        help = "Base URL of the indexing server; defaults to http://localhost:8081"
+        help = "Base URL of the indexing server",
+        default_value = "http://localhost:8081"
     )]
-    indexing_server: Option<String>,
+    indexing_server: String,
 
     #[arg(
         short,
         long,
-        help = "File extensions to include; defaults to jpg,jpeg,jpe"
+        help = "File extensions to include",
+        default_values = vec!["jpg","jpeg","jpe"]
     )]
-    file_extensions: Option<Vec<String>>,
+    file_extensions: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct WebIndexResponse {
+    values: Vec<String>,
+    next_offset: Option<String>,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
-
-    let indexing_server = match args.indexing_server {
-        Some(base_url) => base_url,
-        None => String::from("http://localhost:8081"),
-    };
-
-    let file_extensions = match args.file_extensions {
-        Some(extensions) => extensions,
-        None => vec![
-            String::from("jpg"),
-            String::from("jpeg"),
-            String::from("jpe"),
-        ],
-    };
 
     println!("Loading model from '{}' ...", args.model);
     let device = Device::Cpu;
     let model = embedding::Model::new(device, args.model.as_str())?;
     println!("Model successfully loaded.");
 
-    println!("Indexing photos in '{}' ...", args.photos);
     let photos_path = Path::new(&args.photos);
     let now = Instant::now();
+
+    let file_extensions = args.file_extensions;
+    let indexing_server = args.indexing_server;
+    println!(
+        "Indexing photos in '{}' to '{}' ...",
+        args.photos, indexing_server
+    );
     index_photos(photos_path, file_extensions, &model, &indexing_server)?;
     println!("Indexing photos took {:?}", now.elapsed());
 
@@ -72,6 +73,9 @@ fn index_photos(
         extensions.insert(extension.to_lowercase());
     }
     let extensions = extensions;
+
+    let cur_index = fetch_current_index(server_url)?;
+    println!("Found {} photos in current index.", cur_index.len());
 
     ScanDir::files()
         .skip_symlinks(false)
@@ -94,6 +98,13 @@ fn index_photos(
                     }
                 };
 
+                let rel_path = entry_path.strip_prefix(&photos_path).unwrap();
+                let rel_path = String::from(rel_path.to_str().unwrap());
+                if cur_index.contains(&rel_path) {
+                    continue;
+                }
+
+                println!("Adding {} ...", rel_path);
                 num_files += 1;
                 image_paths.push(entry.path().into_os_string().into_string().unwrap());
 
@@ -118,6 +129,37 @@ fn index_photos(
         .unwrap();
 
     Ok(())
+}
+
+fn fetch_current_index(server_url: &String) -> Result<HashSet<String>> {
+    let index_url = format!("{}/v1/index", server_url);
+    let client = reqwest::blocking::ClientBuilder::new().build()?;
+    let resp = client
+        .get(&index_url)
+        .query(&[("size", "1000")])
+        .send()?
+        .error_for_status()?;
+    let mut paths = HashSet::new();
+
+    let mut json = resp.json::<WebIndexResponse>()?;
+    loop {
+        for path in json.values {
+            paths.insert(path);
+        }
+
+        if let Some(ref next_offset) = json.next_offset {
+            let resp = client
+                .get(&index_url)
+                .query(&[("size", "1000"), ("offset", &next_offset.as_str())])
+                .send()?
+                .error_for_status()?;
+            json = resp.json::<WebIndexResponse>()?;
+        } else {
+            break;
+        }
+    }
+
+    Ok(paths)
 }
 
 fn process_batch(batch: i32, images: &Vec<String>, model: &embedding::Model, server_url: &String) {

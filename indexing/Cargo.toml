@@ -10,6 +10,7 @@ candle-nn.workspace = true
 candle-transformers.workspace = true
 clap = { workspace = true, features = ["derive"] }
 image = { workspace = true, features = ["jpeg"] }
+reqwest.workspace = true
 scan_dir.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
