@@ -43,8 +43,13 @@ type serverContext struct {
 	oauthSettings models.OAuthSettings
 }
 
+type photoPathsResult struct {
+	Values     []string `json:"values"`
+	NextOffset *string  `json:"next_offset,omitempty"`
+}
+
 func newServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir string) (*serverContext, error) {
-	conn, err := grpc.Dial(addr,
+	conn, err := grpc.NewClient(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if nil != err {
 		glog.Exitf("Failed to connect to qdrant '%s' gRPC: %v", addr, err)
@@ -135,6 +140,55 @@ func (c *serverContext) createCollection() (*serverContext, error) {
 	glog.Infof("Collection '%s' successfully created.", c.coll)
 
 	return c, nil
+}
+
+func (c *serverContext) getPhotoPaths(pageSize uint32, offset *string, ctx context.Context) (*photoPathsResult, error) {
+	client := pb.NewPointsClient(c.conn)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req := pb.ScrollPoints{
+		CollectionName: c.coll,
+		WithPayload: &pb.WithPayloadSelector{
+			SelectorOptions: &pb.WithPayloadSelector_Include{
+				Include: &pb.PayloadIncludeSelector{
+					Fields: []string{METADATA_PATH},
+				},
+			},
+		},
+		WithVectors: &pb.WithVectorsSelector{
+			SelectorOptions: &pb.WithVectorsSelector_Enable{
+				Enable: false,
+			},
+		},
+		Limit: &pageSize,
+	}
+	if offset != nil {
+		req.Offset = &pb.PointId{
+			PointIdOptions: &pb.PointId_Uuid{
+				Uuid: *offset,
+			},
+		}
+	}
+	resp, err := client.Scroll(ctx, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	paths := make([]string, len(resp.Result))
+	for i, path := range resp.Result {
+		paths[i] = *getPathFromPayload(path.Payload)
+	}
+	var nextOffset *string
+	if resp.NextPageOffset != nil {
+		nextUuid := resp.NextPageOffset.GetUuid()
+		nextOffset = &nextUuid
+	}
+
+	return &photoPathsResult{
+		Values:     paths,
+		NextOffset: nextOffset,
+	}, nil
 }
 
 func (c *serverContext) upsert(items []*models.ItemToIndex) error {
