@@ -1,12 +1,15 @@
-use std::{collections::HashSet, path::Path, time::Instant};
+use std::{collections::HashSet, iter::zip, path::Path, time::Instant};
 
 use anyhow::Result;
 use candle_core::Device;
 use clap::Parser;
+use json::{object, JsonValue};
+use metadata::{extract_exif, extract_timestamp_from_filename, get_path_metadata};
 use scan_dir::ScanDir;
 use serde::Deserialize;
 
 mod embedding;
+mod metadata;
 
 #[derive(Parser)]
 struct Args {
@@ -28,13 +31,21 @@ struct Args {
         short,
         long,
         help = "File extensions to include",
-        default_values = vec!["jpg","jpeg","jpe"]
+        default_values = vec!["jpg","jpeg","jpe"],
     )]
     file_extensions: Vec<String>,
+
+    #[arg(
+        short,
+        long,
+        help = "Size of a single batch of images to calculate embeddings for",
+        default_value = "20"
+    )]
+    batch_size: usize,
 }
 
 #[derive(Deserialize)]
-struct WebIndexResponse {
+struct GetIndexResponse {
     values: Vec<String>,
     next_offset: Option<String>,
 }
@@ -56,7 +67,13 @@ fn main() -> Result<()> {
         "Indexing photos in '{}' to '{}' ...",
         args.photos, indexing_server
     );
-    index_photos(photos_path, file_extensions, &model, &indexing_server)?;
+    index_photos(
+        photos_path,
+        file_extensions,
+        &model,
+        &indexing_server,
+        args.batch_size,
+    )?;
     println!("Indexing photos took {:?}", now.elapsed());
 
     Ok(())
@@ -67,6 +84,7 @@ fn index_photos(
     file_extensions: Vec<String>,
     model: &embedding::Model,
     server_url: &String,
+    batch_size: usize,
 ) -> Result<()> {
     let mut extensions = HashSet::new();
     for extension in file_extensions {
@@ -82,42 +100,61 @@ fn index_photos(
         .walk(photos_path, |files| {
             let mut batch = 0;
             let mut num_files = 0;
-            let mut image_paths = vec![];
+            let mut batch_data = vec![];
 
             for (entry, _) in files {
                 let entry_path = entry.path();
-                let ext = entry_path.extension();
-                match ext {
-                    None => continue,
-                    Some(ext) => {
-                        let ext = ext.to_os_string().into_string().unwrap();
-                        let ext = ext.to_lowercase();
-                        if !extensions.contains(&ext) {
-                            continue;
-                        }
-                    }
-                };
+                let path_meta = get_path_metadata(&entry_path, &photos_path);
 
-                let rel_path = entry_path.strip_prefix(&photos_path).unwrap();
-                let rel_path = String::from(rel_path.to_str().unwrap());
-                if cur_index.contains(&rel_path) {
+                if path_meta.name.is_none()
+                    || path_meta.extension.is_none()
+                    || cur_index.contains(&path_meta.rel_path)
+                {
+                    // The file does not have a name or extension or it is
+                    // already indexed, skip it.
                     continue;
                 }
 
-                println!("Adding {} ...", rel_path);
-                num_files += 1;
-                image_paths.push(entry.path().into_os_string().into_string().unwrap());
+                let ext = path_meta.extension.clone().unwrap();
+                if !extensions.contains(&ext) {
+                    // The file extension should not be included in indexing, skip it.
+                    continue;
+                }
 
-                if image_paths.len() >= 20 {
+                let mut meta = object! {
+                    path : path_meta.rel_path.clone(),
+                };
+                let (exif, timestamp) = extract_exif(&path_meta.path);
+                if let Some(exif) = exif {
+                    meta["exif"] = exif;
+                }
+
+                let file_name = path_meta.name.clone().unwrap();
+                let timestamp = if let Some(timestamp) = timestamp {
+                    Some(timestamp)
+                } else if let Some(timestamp) = extract_timestamp_from_filename(&file_name) {
+                    Some(timestamp)
+                } else {
+                    None
+                };
+                if let Some(timestamp) = timestamp {
+                    meta["timestamp"] = timestamp.and_utc().timestamp().into();
+                }
+
+                println!("Adding {} ...", path_meta.rel_path);
+                num_files += 1;
+                batch_data.push((path_meta.path, meta));
+
+                if batch_data.len() >= batch_size {
                     batch += 1;
-                    process_batch(batch, &image_paths, model, server_url);
-                    image_paths.clear();
+                    process_batch(batch, batch_data, model, server_url);
+                    batch_data = vec![];
                 }
             }
 
-            if image_paths.len() > 0 {
+            if batch_data.len() > 0 {
                 batch += 1;
-                process_batch(batch, &image_paths, model, server_url);
+                process_batch(batch, batch_data, model, server_url);
             }
 
             println!(
@@ -141,7 +178,7 @@ fn fetch_current_index(server_url: &String) -> Result<HashSet<String>> {
         .error_for_status()?;
     let mut paths = HashSet::new();
 
-    let mut json = resp.json::<WebIndexResponse>()?;
+    let mut json = resp.json::<GetIndexResponse>()?;
     loop {
         for path in json.values {
             paths.insert(path);
@@ -153,7 +190,7 @@ fn fetch_current_index(server_url: &String) -> Result<HashSet<String>> {
                 .query(&[("size", "1000"), ("offset", &next_offset.as_str())])
                 .send()?
                 .error_for_status()?;
-            json = resp.json::<WebIndexResponse>()?;
+            json = resp.json::<GetIndexResponse>()?;
         } else {
             break;
         }
@@ -162,14 +199,23 @@ fn fetch_current_index(server_url: &String) -> Result<HashSet<String>> {
     Ok(paths)
 }
 
-fn process_batch(batch: i32, images: &Vec<String>, model: &embedding::Model, server_url: &String) {
+fn process_batch(
+    batch_no: i32,
+    items: Vec<(String, JsonValue)>,
+    model: &embedding::Model,
+    server_url: &String,
+) {
     println!(
         "Calculate embeddings for batch {} ({} file(s))...",
-        batch,
-        images.len()
+        batch_no,
+        items.len()
     );
 
-    let embeddings = match model.calc_embeddings(images) {
+    let (full_paths, payloads): (Vec<_>, Vec<_>) = items
+        .iter()
+        .map(|item| (item.0.to_owned(), item.1.to_owned()))
+        .unzip();
+    let embeddings = match model.calc_embeddings(&full_paths) {
         Err(e) => {
             eprintln!("Failed to create embeddings: {}", e);
             return;
@@ -177,5 +223,35 @@ fn process_batch(batch: i32, images: &Vec<String>, model: &embedding::Model, ser
         Ok(embeddings) => embeddings,
     };
 
-    println!("TODO: upload {:?} to {}", embeddings, server_url);
+    let vectors_with_payloads: Vec<_> = zip(embeddings, payloads)
+        .map(|item| {
+            object! {
+                v: item.0,
+                p: item.1,
+            }
+        })
+        .collect();
+
+    match upload_embeddings(server_url, vectors_with_payloads) {
+        Err(e) => eprintln!("Error uploading batch: {}", e),
+        _ => {}
+    }
+}
+
+fn upload_embeddings(server_url: &String, items: Vec<JsonValue>) -> Result<()> {
+    let index_url = format!("{}/v1/index", server_url);
+    let client = reqwest::blocking::ClientBuilder::new().build()?;
+
+    let request = object! {
+        items: items,
+    };
+    println!("Uploading batch to internal server ...");
+    client
+        .post(&index_url)
+        .body(request.dump())
+        .header("content-type", "application/json")
+        .send()?
+        .error_for_status()?;
+
+    Ok(())
 }

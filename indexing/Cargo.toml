@@ -8,8 +8,12 @@ anyhow = { workspace = true, features = ["backtrace"] }
 candle-core.workspace = true
 candle-nn.workspace = true
 candle-transformers.workspace = true
+chrono.workspace = true
 clap = { workspace = true, features = ["derive"] }
 image = { workspace = true, features = ["jpeg"] }
+json.workspace = true
+nom-exif.workspace = true
+regex.workspace = true
 reqwest.workspace = true
 scan_dir.workspace = true
 serde = { workspace = true, features = ["derive"] }
