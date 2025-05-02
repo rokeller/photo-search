@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/disintegration/imaging v1.6.2 // direct
-	github.com/golang/glog v1.2.4 // direct
+	github.com/golang/glog v1.2.5 // direct
 	github.com/gorilla/mux v1.8.1 // direct
 	github.com/qdrant/go-client v1.14.0 // direct
 	google.golang.org/grpc v1.72.0 // direct
