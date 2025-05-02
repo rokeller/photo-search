@@ -4,11 +4,15 @@ GitHub Release:
 [![GitHub Release](https://img.shields.io/github/v/release/rokeller/photo-search)](https://github.com/rokeller/photo-search/releases/latest)
 
 Container images:
+
 [![Web Docker Image Version](https://img.shields.io/docker/v/rokeller/photo-search?label=photo-search)](https://hub.docker.com/r/rokeller/photo-search)
 [![Web Docker Image Size](https://img.shields.io/docker/image-size/rokeller/photo-search?label=photo-search)](https://hub.docker.com/r/rokeller/photo-search)
 
 [![Embeddings Docker Image Version](https://img.shields.io/docker/v/rokeller/photo-search-embedding?label=photo-search-embedding)](https://hub.docker.com/r/rokeller/photo-search-embedding)
 [![Embeddings Docker Image Size](https://img.shields.io/docker/image-size/rokeller/photo-search-embedding?label=photo-search-embedding)](https://hub.docker.com/r/rokeller/photo-search-embedding)
+
+[![Indexing Docker Image Version](https://img.shields.io/docker/v/rokeller/photo-search-indexing?label=photo-search-indexing)](https://hub.docker.com/r/rokeller/photo-search-indexing)
+[![Indexing Docker Image Size](https://img.shields.io/docker/image-size/rokeller/photo-search-indexing?label=photo-search-indexing)](https://hub.docker.com/r/rokeller/photo-search-indexing)
 
 
 This repository holds everything needed to run a browser GUI offering semantic
