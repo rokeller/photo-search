@@ -8,10 +8,13 @@ on:
 env:
   FILE_OCI_WEB: web-server.tar
   FILE_OCI_EMBEDDING: embedding-server.tar
+  FILE_OCI_INDEXING: indexing-tool.tar
   ARTIFACT_WEB: web-server
   ARTIFACT_EMBEDDING: embedding-server
+  ARTIFACT_INDEXING: indexing-tool
   IMAGE_NAME_WEB: rokeller/photo-search
   IMAGE_NAME_EMBEDDING: rokeller/photo-search-embedding
+  IMAGE_NAME_INDEXING: rokeller/photo-search-indexing
   CARGO_TERM_COLOR: always
   RUSTUP_TOOLCHAIN: stable
   RUST_FINAL_TARGET: x86_64-unknown-linux-musl
@@ -40,7 +43,7 @@ jobs:
           name: ${{ env.ARTIFACT_WEB }}
           path: ${{ env.FILE_OCI_WEB }}
 
-  build-embedding-server:
+  build-rust:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,13 +86,31 @@ jobs:
           docker image save ${{ env.IMAGE_NAME_EMBEDDING }} \
             -o ${{ env.FILE_OCI_EMBEDDING }}
 
+      - name: Build indexing tool container image
+        run: |
+          echo 'Build indexing tool container image ...'
+          docker image build \
+            --build-arg APP_VERSION=$GITHUB_REF_NAME \
+            -t ${{ env.IMAGE_NAME_INDEXING }} \
+            -f containers/indexing.Dockerfile \
+            .
+
+          echo 'Export indexing tool container image ...'
+          docker image save ${{ env.IMAGE_NAME_INDEXING }} \
+            -o ${{ env.FILE_OCI_INDEXING }}
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_EMBEDDING }}
           path: ${{ env.FILE_OCI_EMBEDDING }}
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_INDEXING }}
+          path: ${{ env.FILE_OCI_INDEXING }}
+
   push-images:
-    needs: [ build-web-server, build-embedding-server ]
+    needs: [ build-web-server, build-rust ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -98,12 +119,18 @@ jobs:
       - name: Push container images
         run: |
           echo 'Importing and tagging images from artifacts ...'
+
           docker image load -i ${{ env.FILE_OCI_WEB }}
           docker image tag ${{ env.IMAGE_NAME_WEB }} \
             ${{ env.IMAGE_NAME_WEB }}:$GITHUB_REF_NAME
+
           docker image load -i ${{ env.FILE_OCI_EMBEDDING }}
           docker image tag ${{ env.IMAGE_NAME_EMBEDDING }} \
             ${{ env.IMAGE_NAME_EMBEDDING }}:$GITHUB_REF_NAME
+
+          docker image load -i ${{ env.FILE_OCI_INDEXING }}
+          docker image tag ${{ env.IMAGE_NAME_INDEXING }} \
+            ${{ env.IMAGE_NAME_INDEXING }}:$GITHUB_REF_NAME
 
           echo 'Logging in to docker hub registry ...'
           echo -n "${{ secrets.DOCKER_PASSWORD }}" | docker login \
@@ -113,6 +140,7 @@ jobs:
           echo 'Pushing container images ...'
           docker image push ${{ env.IMAGE_NAME_WEB }}:$GITHUB_REF_NAME
           docker image push ${{ env.IMAGE_NAME_EMBEDDING }}:$GITHUB_REF_NAME
+          docker image push ${{ env.IMAGE_NAME_INDEXING }}:$GITHUB_REF_NAME
 
           echo 'Logging out of docker hub registry ...'
           docker logout
