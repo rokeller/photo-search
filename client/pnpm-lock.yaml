@@ -47,7 +47,7 @@ importers:
         version: 6.21.0(eslint@8.57.1)(typescript@5.8.3)
       '@vitejs/plugin-react':
         specifier: ^4.4.1
-        version: 4.4.1(vite@6.3.5(sass@1.88.0))
+        version: 4.4.1(vite@6.3.5(sass@1.89.0))
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -58,8 +58,8 @@ importers:
         specifier: ^0.4.20
         version: 0.4.20(eslint@8.57.1)
       sass:
-        specifier: ^1.88.0
-        version: 1.88.0
+        specifier: ^1.89.0
+        version: 1.89.0
       svgo:
         specifier: ^3.3.2
         version: 3.3.2
@@ -68,10 +68,10 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^6.3.5
-        version: 6.3.5(sass@1.88.0)
+        version: 6.3.5(sass@1.89.0)
       vite-plugin-image-optimizer:
         specifier: ^1.1.8
-        version: 1.1.8(vite@6.3.5(sass@1.88.0))
+        version: 1.1.8(vite@6.3.5(sass@1.89.0))
 
 packages:
 
@@ -1285,8 +1285,8 @@ packages:
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
-  sass@1.88.0:
-    resolution: {integrity: sha512-sF6TWQqjFvr4JILXzG4ucGOLELkESHL+I5QJhh7CNaE+Yge0SI+ehCatsXhJ7ymU1hAFcIS3/PBpjdIbXoyVbg==}
+  sass@1.89.0:
+    resolution: {integrity: sha512-ld+kQU8YTdGNjOLfRWBzewJpU5cwEv/h5yyqlSeJcj6Yh8U4TDA9UA5FPicqDz/xgRPWRSYIQNiFks21TbA9KQ==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -1986,14 +1986,14 @@ snapshots:
 
   '@ungap/structured-clone@1.2.0': {}
 
-  '@vitejs/plugin-react@4.4.1(vite@6.3.5(sass@1.88.0))':
+  '@vitejs/plugin-react@4.4.1(vite@6.3.5(sass@1.89.0))':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/plugin-transform-react-jsx-self': 7.25.9(@babel/core@7.26.10)
       '@babel/plugin-transform-react-jsx-source': 7.25.9(@babel/core@7.26.10)
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.3.5(sass@1.88.0)
+      vite: 6.3.5(sass@1.89.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -2592,7 +2592,7 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
-  sass@1.88.0:
+  sass@1.89.0:
     dependencies:
       chokidar: 4.0.3
       immutable: 5.1.2
@@ -2675,13 +2675,13 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  vite-plugin-image-optimizer@1.1.8(vite@6.3.5(sass@1.88.0)):
+  vite-plugin-image-optimizer@1.1.8(vite@6.3.5(sass@1.89.0)):
     dependencies:
       ansi-colors: 4.1.3
       pathe: 1.1.2
-      vite: 6.3.5(sass@1.88.0)
+      vite: 6.3.5(sass@1.89.0)
 
-  vite@6.3.5(sass@1.88.0):
+  vite@6.3.5(sass@1.89.0):
     dependencies:
       esbuild: 0.25.4
       fdir: 6.4.4(picomatch@4.0.2)
@@ -2691,7 +2691,7 @@ snapshots:
       tinyglobby: 0.2.13
     optionalDependencies:
       fsevents: 2.3.3
-      sass: 1.88.0
+      sass: 1.89.0
 
   which@2.0.2:
     dependencies:
