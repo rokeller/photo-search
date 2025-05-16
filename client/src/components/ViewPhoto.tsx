@@ -15,6 +15,7 @@ export function ViewPhoto({ photoId, hidePhoto }: ViewPhotoProps) {
             const url = await PhotoService.getPhoto(photoId);
             setPhotoUrl(url);
         } catch (e) {
+            console.error('failed to load photo', e);
             setPhotoUrl(undefined);
         }
     };

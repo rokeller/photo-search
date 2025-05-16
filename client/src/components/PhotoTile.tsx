@@ -30,6 +30,7 @@ export function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
             const photoUrl = await PhotoService.getPhoto(details.id, 512);
             setPhotoUrl(photoUrl);
         } catch (e) {
+            console.error('failed to load photo', e);
             setPhotoUrl(undefined);
         }
     }
