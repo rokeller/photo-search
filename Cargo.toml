@@ -15,7 +15,7 @@ chrono = "0.4.41"
 clap = "4.5.38"
 image = { version = "0.25.6", default-features = false }
 json = "0.12.4"
-nom-exif = "2.5.1"
+nom-exif = "2.5.4"
 regex = "1.11.1"
 reqwest = { version = "0.12.15", default-features = false, features = ["http2", "blocking", "json"] }
 scan_dir = "0.3.3"
