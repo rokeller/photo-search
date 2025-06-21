@@ -1,21 +1,18 @@
-import faviconUrl from '../assets/favicon-96.png';
-import { LogoutButton, PhotoFilterControls, SearchBox } from '../components';
-import './Home.scss';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import PerfectCentered from '../components/PerfectCentered';
 
-export function Home() {
-    return <div className='welcome perfect-center'>
-        <div className='title'>
-            <img alt='Photo Search by flrx39.net' title='Photo Search by flrx39.net'
-                src={faviconUrl}
-                className='logo' />
-            Photo Search
-        </div>
-        <div>
-            <SearchBox />
-        </div>
-        <div className='controls'>
-            <PhotoFilterControls />
-            <LogoutButton />
-        </div>
-    </div >
+export default function Home() {
+    return (
+        <PerfectCentered>
+            <Box padding={2}>
+                <Typography component='h1' variant='h4'>
+                    Welcome to Photo Search.
+                </Typography>
+                <Typography variant='body1'>
+                    Use the search box on the top to start exploring your photos.
+                </Typography>
+            </Box>
+        </PerfectCentered>
+    );
 }

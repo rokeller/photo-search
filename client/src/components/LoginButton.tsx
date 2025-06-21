@@ -1,5 +1,6 @@
 import { IPublicClientApplication } from '@azure/msal-browser';
 import { useMsal } from '@azure/msal-react';
+import Button from '@mui/material/Button';
 import { getRequest } from '../services/AuthConfig';
 
 async function handleLogin(instance: IPublicClientApplication) {
@@ -15,11 +16,13 @@ async function handleLogin(instance: IPublicClientApplication) {
     }
 }
 
-export function LoginButton() {
+export default function LoginButton() {
     const { instance } = useMsal();
 
     return (
-        <button className='ms-auto btn btn-secondary'
-            onClick={() => handleLogin(instance)}>Login now</button>
+        <Button fullWidth variant='outlined'
+            onClick={() => handleLogin(instance)}>
+            Login now
+        </Button>
     );
 }

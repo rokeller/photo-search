@@ -18,6 +18,25 @@ export default defineConfig(({ command }) => {
 
     return {
         ...mergeConfig,
+
+        build: {
+            rollupOptions: {
+                output: {
+                    manualChunks(id) {
+                        if (id.indexOf('@mui') >= 0) {
+                            return 'mui';
+                        }
+                        if (id.indexOf('react') >= 0) {
+                            return 'react';
+                        }
+                        if (id.indexOf('node_modules') >= 0) {
+                            return 'vendor';
+                        }
+                    },
+                },
+            },
+        },
+
         plugins: [
             react(),
             ViteImageOptimizer({
