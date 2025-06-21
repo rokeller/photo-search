@@ -5,7 +5,7 @@ export interface ErrorResponse {
 
 export function isErrorResponse(obj: unknown): obj is ErrorResponse {
     const errResp = obj as ErrorResponse;
-    return (errResp)?.code !== undefined 
+    return (errResp)?.code !== undefined
         && typeof errResp.code === 'string'
         && typeof errResp.message === 'string';
 }

@@ -1,18 +1,23 @@
-import { useEffect, useState } from 'react';
-import Masonry from 'react-layout-masonry';
-import { PhotoTile, ViewPhoto } from '.';
+import Masonry from '@mui/lab/Masonry';
+import Box from '@mui/material/Box';
+import Dialog from '@mui/material/Dialog';
+import Paper from '@mui/material/Paper';
+import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
+import React from 'react';
 import { PhotoResultItem } from '../services';
-import './PhotoContainer.scss'
+import PhotoTile from './PhotoTile';
+import ViewPhoto from './ViewPhoto';
 
 interface PhotoContainerProps {
     photos?: Array<PhotoResultItem>;
     onLoadMore?: () => void;
 }
 
-export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
-    const [photoId, setPhotoId] = useState<string>();
+export default function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
+    const [photoId, setPhotoId] = React.useState<string>();
 
-    useEffect(() => {
+    React.useEffect(() => {
         function onScroll() {
             const endOfPage = window.innerHeight + window.scrollY >= document.body.offsetHeight;
             if (endOfPage && onLoadMore) {
@@ -24,54 +29,56 @@ export function PhotoContainer({ photos, onLoadMore }: PhotoContainerProps) {
 
         return () => {
             window.removeEventListener('scroll', onScroll);
-        }
-    });
-
-    useEffect(() => {
-        const onViewKeyUp = (ev: KeyboardEvent) => {
-            if (ev.key === 'Escape') {
-                hidePhoto();
-            }
         };
-
-        if (photoId !== undefined) {
-            window.addEventListener('keyup', onViewKeyUp);
-        } else {
-            window.removeEventListener('keyup', onViewKeyUp);
-        }
-
-        return () => {
-            window.removeEventListener('keyup', onViewKeyUp);
-        }
-    }, [photoId])
-
+    });
 
     function showPhoto(photoId: string) {
         setPhotoId(photoId);
-        document.body.classList.add('overflow-open');
     }
 
     function hidePhoto() {
-        document.body.classList.remove('overflow-open');
         setPhotoId(undefined);
     }
 
-    return <div className='photos'>
-        <Masonry columns={{ 0: 1, 599: 2, 999: 3, 1199: 4 }} gap={8}>
-            {
-                photos?.map(
-                    (item, index) => <div key={index + '-' + item.id} className='item'>
-                        <PhotoTile details={item} resultIndex={index}
-                            onView={() => showPhoto(item.id)} />
-                    </div>
-                )
-            }
-        </Masonry>
-        {
-            photoId !== undefined ?
-                <ViewPhoto photoId={photoId} hidePhoto={hidePhoto} /> :
-                <></>
-        }
+    if (photos && photos.length <= 0) {
+        return (
+            <Box display='flex' justifyContent='center'>
+                No photos found. If you have filters set, try changing or removing them.
+            </Box>
+        )
+    }
 
-    </div >
+    const photoTiles = (photos === undefined) ?
+        new Array(12).fill(0).map((_, index) => (
+            <Paper key={'skeleton-' + index}>
+                <Stack direction='column'>
+                    <Skeleton variant='rectangular' height={360} />
+                    <Box>
+                        <Skeleton variant='text' />
+                        <Skeleton variant='text' width='60%' />
+                    </Box>
+                </Stack>
+            </Paper>
+        ))
+        : photos.map((item, index) => (
+            <PhotoTile key={index + '-' + item.id} details={item}
+                resultIndex={index} onView={() => showPhoto(item.id)} />
+        ));
+
+    const viewPhoto = photoId !== undefined ?
+        (
+            <Dialog open onClose={hidePhoto} fullScreen hideBackdrop>
+                <ViewPhoto photoId={photoId} hide={hidePhoto} />
+            </Dialog>
+        )
+        : null;
+
+    return (
+        <>
+            <Masonry columns={{ xs: 1, sm: 2, md: 3, lg: 4, }} spacing={1}>
+                {photoTiles}
+            </Masonry>
+            {viewPhoto}
+        </>
+    );
 }

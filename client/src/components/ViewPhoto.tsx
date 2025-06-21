@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import React from 'react';
 import { PhotoService } from '../services';
-import { PhotoWithRetry } from './PhotoWithRetry';
+import PhotoWithRetry from './PhotoWithRetry';
 
 interface ViewPhotoProps {
     photoId: string;
-    hidePhoto: () => void;
+    hide: () => void;
 }
 
-export function ViewPhoto({ photoId, hidePhoto }: ViewPhotoProps) {
+export default function ViewPhoto({ photoId, hide }: ViewPhotoProps) {
     // A photoUrl of undefined means that we couldn't load the photo but we can try again.
-    const [photoUrl, setPhotoUrl] = useState<string | undefined>('/please-wait.svg');
+    const [photoUrl, setPhotoUrl] = React.useState<string | undefined>('/please-wait.svg');
     const loadPhoto = async () => {
         try {
             const url = await PhotoService.getPhoto(photoId);
@@ -20,13 +24,24 @@ export function ViewPhoto({ photoId, hidePhoto }: ViewPhotoProps) {
         }
     };
 
-    useEffect(() => {
+    React.useEffect(() => {
         loadPhoto();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [photoId]);
 
-    return <div className='view'>
-        <PhotoWithRetry photoUrl={photoUrl} onRetry={loadPhoto} />
-        <div className='close-btn' onClick={hidePhoto}>✖️</div>
-    </div>
+    return (
+        <Paper sx={{ p: 1, width: '100vw', height: '100vh', }}>
+            <Box display='flex' justifyContent='center' width='100%' height='100%'>
+                <PhotoWithRetry preview={false} photoUrl={photoUrl} onRetry={loadPhoto} />
+            </Box>
+            <Button aria-label='close' onClick={hide} color='secondary'
+                variant='outlined' endIcon={<CloseIcon />} sx={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                }}>
+                Close
+            </Button>
+        </Paper>
+    );
 }

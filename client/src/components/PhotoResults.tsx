@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { toast } from 'react-toastify';
-import { PhotoContainer } from '.';
 import { PhotoResultItem, PhotoResultsResponse, PhotoService, isErrorResponse } from '../services';
+import PhotoContainer from './PhotoContainer';
 
 const LIMIT = 12;
 type RetrieveFn<T> = (props: T, offset?: number) => Promise<PhotoResultsResponse>;
 
 function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
     const Component = (props: TProps) => {
-        const isUpdating = useRef(false);
-        const [photos, setPhotos] = useState<Array<PhotoResultItem>>();
+        const isUpdating = React.useRef(false);
+        const [photos, setPhotos] = React.useState<Array<PhotoResultItem>>();
 
         const updatePhotos = async (offset?: number) => {
             if (isUpdating.current) {
@@ -35,13 +35,13 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
 
         const doLoadMore = () => {
             // It's really pointless to load more photos unless we already have
-            // photos.
+            // some photos.
             if (photos) {
                 updatePhotos(photos?.length);
             }
         };
 
-        useEffect(() => {
+        React.useEffect(() => {
             // The props have changed, which means the driving factor for the
             // retrieveFn has changed. That implies that we move to a new result
             // set, which is why we should move to the beginning of the page
@@ -51,7 +51,7 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [props]);
 
-        useEffect(() => {
+        React.useEffect(() => {
             const onFilterChanged = () => {
                 // The filter has changed, so we need to start at the top again
                 // and fetch a new result set.
