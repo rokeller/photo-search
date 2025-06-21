@@ -66,7 +66,7 @@ type SearchAction = SearchActionSetQuery | SearchActionNavigate;
 
 export default function SearchBox() {
     const searchId = React.useId();
-    const [_, dispatch] = React.useReducer(reducer, {});
+    const [searchState, dispatch] = React.useReducer(reducer, {});
     const { query } = useParams<keyof PhotosSearchParams>();
     const navigate = useNavigate();
 
@@ -89,7 +89,7 @@ export default function SearchBox() {
     }
 
     function navigateForQuery(query?: string) {
-        if (!!query) {
+        if (query !== undefined && query !== '') {
             navigate('/photos/search/' + encodeURIComponent(query));
         } else {
             navigate('/');
@@ -100,6 +100,7 @@ export default function SearchBox() {
         const search = getSearchInput();
         if (search) {
             const query = search.value;
+            console.debug('setQuery', 'searchState=', searchState, 'newQuery=', query);
             dispatch({ type: 'setQuery', query, });
             dispatch({ type: 'navigate', });
         }
@@ -117,6 +118,7 @@ export default function SearchBox() {
         if (search) {
             search.value = query ?? '';
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query,]);
 
     React.useEffect(() => {
@@ -127,6 +129,7 @@ export default function SearchBox() {
                 search.removeEventListener('search', setQuery);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchId,]);
 
     return (
