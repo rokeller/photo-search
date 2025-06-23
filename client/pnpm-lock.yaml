@@ -94,8 +94,8 @@ importers:
         specifier: ^6.3.5
         version: 6.3.5(sass@1.89.0)
       vite-plugin-image-optimizer:
-        specifier: ^1.1.8
-        version: 1.1.8(vite@6.3.5(sass@1.89.0))
+        specifier: ^1.1.9
+        version: 1.1.9(vite@6.3.5(sass@1.89.0))
 
 packages:
 
@@ -1686,8 +1686,8 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
-  vite-plugin-image-optimizer@1.1.8:
-    resolution: {integrity: sha512-40bYRDHQLUOrIwJIJQqyKJHrfgVshqzDLtMy8SEgf+fB7PnppslSTTkY7PJFrBGqgbCdOdN9KkqsvccXmnEa5Q==}
+  vite-plugin-image-optimizer@1.1.9:
+    resolution: {integrity: sha512-66sB+o6FMkNdZby1vJrVI1AhnaZKc/m3k/3WY7V1/hd3NS4ZosC86UeOsyRKBlA5iApgR0rZONbu2mS4v4V0Mg==}
     engines: {node: '>=14'}
     peerDependencies:
       vite: '>=3'
@@ -3288,7 +3288,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  vite-plugin-image-optimizer@1.1.8(vite@6.3.5(sass@1.89.0)):
+  vite-plugin-image-optimizer@1.1.9(vite@6.3.5(sass@1.89.0)):
     dependencies:
       ansi-colors: 4.1.3
       pathe: 1.1.2
