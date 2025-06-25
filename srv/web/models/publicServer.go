@@ -18,6 +18,8 @@ type RecommendPhotosRequest struct {
 }
 
 type PhotoFilter struct {
+	MinScore *float32 `json:"minScore,omitempty"`
+
 	NotBefore *int64 `json:"notBefore,omitempty"`
 	NotAfter  *int64 `json:"notAfter,omitempty"`
 
