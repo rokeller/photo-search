@@ -1,18 +1,20 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Input from '@mui/material/Input';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
-import React, { SetStateAction } from 'react';
+import React, { SetStateAction, useEffect } from 'react';
 import { PhotoService } from '../services';
 
 interface FilterSettingsProps {
@@ -75,28 +77,41 @@ interface TimestampSelectorProps {
     setter: React.Dispatch<React.SetStateAction<Date | undefined>>
 }
 
-function TimestampSelector(props: TimestampSelectorProps) {
-    const { label, timestamp, setter, } = props;
+function TimestampSelector(props: React.PropsWithChildren<TimestampSelectorProps>) {
+    const { label, children, timestamp, setter, } = props;
+    const [enabled, setEnabled] = React.useState(timestamp !== undefined);
+    const [lastVal, setLastVal] = React.useState(timestamp);
 
-    function onChangeTimestamp(
-        setter: React.Dispatch<React.SetStateAction<Date | undefined>>
-    ) {
-        return (ev: React.ChangeEvent<HTMLInputElement>) => {
-            const local = ev.target.value;
-            setter(new Date(local + 'Z'));
+    function onChangeTimestamp(ev: React.ChangeEvent<HTMLInputElement>) {
+        const local = ev.target.value;
+        const val = new Date(local + 'Z');
+        setter(val);
+        setLastVal(val);
+    }
+
+    function onToggleFilter(ev: React.ChangeEvent<HTMLInputElement>) {
+        setEnabled(ev.target.checked);
+        if (!ev.target.checked) {
+            setter(undefined);
         }
     }
 
+    useEffect(() => {
+        setEnabled(timestamp !== undefined);
+    }, [timestamp,])
+
+    const checkbox = <Checkbox checked={enabled} onChange={onToggleFilter} />;
+
     return (
-        <Stack direction='row'>
-            <FormControlLabel label={label} labelPlacement='top'
-                control={<input type='datetime-local' value={makeInputControlTimestamp(timestamp)}
-                    onChange={onChangeTimestamp(setter)} />} />
-            <Button color='secondary' onClick={() => setter(undefined)}>{`Remove "${label}" filter`}</Button>
+        <Stack direction='column'>
+            <FormControlLabel label={label} control={checkbox} />
+            {children}
+            <Input type='datetime-local' disabled={!enabled}
+                value={makeInputControlTimestamp(timestamp || lastVal)}
+                onChange={onChangeTimestamp} />
         </Stack>
     );
 }
-
 
 interface DateSelectorProps {
     label: string;
@@ -104,24 +119,38 @@ interface DateSelectorProps {
     setter: React.Dispatch<React.SetStateAction<Date | undefined>>
 }
 
-function DateSelector(props: DateSelectorProps) {
-    const { label, date, setter, } = props;
+function DateSelector(props: React.PropsWithChildren<DateSelectorProps>) {
+    const { label, children, date, setter, } = props;
+    const [enabled, setEnabled] = React.useState(date !== undefined);
+    const [lastVal, setLastVal] = React.useState(date);
 
-    function onChangeDate(
-        setValue: React.Dispatch<React.SetStateAction<Date | undefined>>
-    ) {
-        return (ev: React.ChangeEvent<HTMLInputElement>) => {
-            const local = ev.target.value;
-            setValue(new Date(local + 'T00:00:00Z'));
+    function onChangeDate(ev: React.ChangeEvent<HTMLInputElement>) {
+        const local = ev.target.value;
+        const val = new Date(local + 'T00:00:00Z');
+        setter(val);
+        setLastVal(val);
+    }
+
+    function onToggleFilter(ev: React.ChangeEvent<HTMLInputElement>) {
+        setEnabled(ev.target.checked);
+        if (!ev.target.checked) {
+            setter(undefined);
         }
     }
 
+    useEffect(() => {
+        setEnabled(date !== undefined);
+    }, [date,])
+
+    const checkbox = <Checkbox checked={enabled} onChange={onToggleFilter} />;
+
     return (
-        <Stack direction='row'>
-            <FormControlLabel label={label} labelPlacement='top'
-                control={<input type='date' value={makeInputControlDate(date)}
-                    onChange={onChangeDate(setter)} />} />
-            <Button color='secondary' onClick={() => setter(undefined)}>{`Remove "${label}" filter`}</Button>
+        <Stack direction='column'>
+            <FormControlLabel label={label} control={checkbox} />
+            {children}
+            <Input type='date' disabled={!enabled}
+                value={makeInputControlDate(date || lastVal)}
+                onChange={onChangeDate} />
         </Stack>
     );
 }
@@ -270,15 +299,24 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
 
                 <TabPanel value={tab} index={1}>
                     <Box>
-                        <TimestampSelector label='Not before' setter={setNotBefore} timestamp={notBefore} />
-                        <Typography variant='body2'>
-                            Show only photos with a timestamp (local time of where
-                            the photo was taken) that is not before this date/time.
-                        </Typography>
+                        <TimestampSelector label='Not before' setter={setNotBefore} timestamp={notBefore}>
+                            <Typography variant='body2'>
+                                Show only photos with a timestamp (local time of where
+                                the photo was taken) that is not before this date/time.
+                            </Typography>
+                        </TimestampSelector>
                     </Box>
 
                     <Box mt={2}>
-                        <TimestampSelector label='Not after' setter={setNotAfter} timestamp={notAfter} />
+                        <TimestampSelector label='Not after' setter={setNotAfter} timestamp={notAfter}>
+                            <Typography variant='body2'>
+                                Show only photos with a timestamp (local time of where
+                                the photo was taken) that is not after this date/time.
+                            </Typography>
+                        </TimestampSelector>
+                    </Box>
+
+                    <Box mt={2}>
                         {
                             notBefore !== undefined && notAfter !== undefined &&
                                 notBefore > notAfter ?
@@ -290,10 +328,6 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                                 :
                                 null
                         }
-                        <Typography variant='body2'>
-                            Show only photos with a timestamp (local time of where
-                            the photo was taken) that is not after this date/time.
-                        </Typography>
                         <Button disabled={notBefore === undefined && notAfter === undefined}
                             color='secondary' onClick={swapNotBeforeNotAfter}>
                             Swap "Not before" and "Not after"
@@ -301,11 +335,12 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                     </Box>
 
                     <Box mt={2}>
-                        <DateSelector label='On this day' setter={setOnThisDay} date={onThisDay} />
-                        <Typography variant='body2'>
-                            Show only photos with a timestamp (local time of where
-                            the photo was taken) that is the day (of any year).
-                        </Typography>
+                        <DateSelector label='On this day' setter={setOnThisDay} date={onThisDay}>
+                            <Typography variant='body2'>
+                                Show only photos with a timestamp (local time of where
+                                the photo was taken) that is the day (of any year).
+                            </Typography>
+                        </DateSelector>
                     </Box>
                 </TabPanel>
             </DialogContent>

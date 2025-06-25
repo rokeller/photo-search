@@ -321,7 +321,7 @@ func (c *serverContext) search(
 	qdrantFilter := makeQdrantFilter(filter)
 	glog.V(1).Infof("Search filter: %v", qdrantFilter)
 
-	r, err := client.Search(ctx, &pb.SearchPoints{
+	req := &pb.SearchPoints{
 		CollectionName: c.coll,
 		Vector:         v,
 		Limit:          uint64(limit),
@@ -330,7 +330,12 @@ func (c *serverContext) search(
 		WithPayload: &pb.WithPayloadSelector{
 			SelectorOptions: &pb.WithPayloadSelector_Enable{Enable: true},
 		},
-	})
+	}
+	if nil != filter.MinScore {
+		req.ScoreThreshold = filter.MinScore
+	}
+
+	r, err := client.Search(ctx, req)
 	if nil != err {
 		code := status.Code(err)
 		glog.Errorf("Failed to search vectors: %v; grpc code: %v", err, code)
@@ -365,7 +370,7 @@ func (c *serverContext) recommend(
 	qdrantFilter := makeQdrantFilter(filter)
 	glog.V(1).Infof("Recommend filter: %v", qdrantFilter)
 
-	r, err := client.Recommend(ctx, &pb.RecommendPoints{
+	req := &pb.RecommendPoints{
 		CollectionName: c.coll,
 		Positive: []*pb.PointId{
 			{
@@ -378,7 +383,11 @@ func (c *serverContext) recommend(
 		WithPayload: &pb.WithPayloadSelector{
 			SelectorOptions: &pb.WithPayloadSelector_Enable{Enable: true},
 		},
-	})
+	}
+	if nil != filter.MinScore {
+		req.ScoreThreshold = filter.MinScore
+	}
+	r, err := client.Recommend(ctx, req)
 	if nil != err {
 		code := status.Code(err)
 		glog.Errorf("Failed to recommend similar for '%s': %v; grpc code: %v",
