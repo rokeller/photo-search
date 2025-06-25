@@ -12,8 +12,8 @@ importers:
         specifier: ^4.13.2
         version: 4.13.2
       '@azure/msal-react':
-        specifier: ^3.0.12
-        version: 3.0.12(@azure/msal-browser@4.13.2)(react@19.1.0)
+        specifier: ^3.0.13
+        version: 3.0.13(@azure/msal-browser@4.13.2)(react@19.1.0)
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.1.8)(react@19.1.0)
@@ -111,11 +111,11 @@ packages:
     resolution: {integrity: sha512-a0eowoYfRfKZEjbiCoA5bPT3IlWRAdGSvi63OU23Hv+X6EI8gbvXCoeqokUceFMoT9NfRUWTJSx5FiuzruqT8g==}
     engines: {node: '>=0.8.0'}
 
-  '@azure/msal-react@3.0.12':
-    resolution: {integrity: sha512-Rnw1hcx/ILYmbhcPZbhQNdBpf0jE3P0nMiwLKRMqgjnACqOiHQ5+ZZzEIXwEPiva9TPSrW34yvNBTLx8k/5pVg==}
+  '@azure/msal-react@3.0.13':
+    resolution: {integrity: sha512-g0jk1CXCWVyshSqdaFW0ES8qTXGHiQZlgfnkS+Oxa0eDgw3phdm8I2EChtFiK67OmoQr+HmYPRrg+s8NpvdeRQ==}
     engines: {node: '>=10'}
     peerDependencies:
-      '@azure/msal-browser': ^4.12.0
+      '@azure/msal-browser': ^4.13.2
       react: ^16.8.0 || ^17 || ^18 || ^19
 
   '@babel/code-frame@7.26.2':
@@ -1765,7 +1765,7 @@ snapshots:
 
   '@azure/msal-common@15.7.1': {}
 
-  '@azure/msal-react@3.0.12(@azure/msal-browser@4.13.2)(react@19.1.0)':
+  '@azure/msal-react@3.0.13(@azure/msal-browser@4.13.2)(react@19.1.0)':
     dependencies:
       '@azure/msal-browser': 4.13.2
       react: 19.1.0
