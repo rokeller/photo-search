@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@azure/msal-browser':
-        specifier: ^4.13.2
-        version: 4.13.2
+        specifier: ^4.20.0
+        version: 4.20.0
       '@azure/msal-react':
         specifier: ^3.0.13
-        version: 3.0.13(@azure/msal-browser@4.13.2)(react@19.1.0)
+        version: 3.0.13(@azure/msal-browser@4.20.0)(react@19.1.0)
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.1.8)(react@19.1.0)
@@ -103,12 +103,12 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@azure/msal-browser@4.13.2':
-    resolution: {integrity: sha512-lS75bF6FYZRwsacKLXc8UYu/jb+gOB7dtZq5938chCvV/zKTFDnzuXxCXhsSUh0p8s/P8ztgbfdueD9lFARQlQ==}
+  '@azure/msal-browser@4.20.0':
+    resolution: {integrity: sha512-JBGaxnYAvzFsT5TU6XhVpqc4XVMFjzsi6rrAVINX0PL3+wzs+k12fnvN/XFICvzCfV28NvHzxGfRRBoqE6GxNg==}
     engines: {node: '>=0.8.0'}
 
-  '@azure/msal-common@15.7.1':
-    resolution: {integrity: sha512-a0eowoYfRfKZEjbiCoA5bPT3IlWRAdGSvi63OU23Hv+X6EI8gbvXCoeqokUceFMoT9NfRUWTJSx5FiuzruqT8g==}
+  '@azure/msal-common@15.11.0':
+    resolution: {integrity: sha512-1IseGNH6XGWe+5xhZlhasTJP6Ob7tnVSlfFUnjdeH4Kik0n1SORTmdB6xxTwbx9Ro8EuO0XaRzpdABWSf15sdg==}
     engines: {node: '>=0.8.0'}
 
   '@azure/msal-react@3.0.13':
@@ -1758,15 +1758,15 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.29
 
-  '@azure/msal-browser@4.13.2':
+  '@azure/msal-browser@4.20.0':
     dependencies:
-      '@azure/msal-common': 15.7.1
+      '@azure/msal-common': 15.11.0
 
-  '@azure/msal-common@15.7.1': {}
+  '@azure/msal-common@15.11.0': {}
 
-  '@azure/msal-react@3.0.13(@azure/msal-browser@4.13.2)(react@19.1.0)':
+  '@azure/msal-react@3.0.13(@azure/msal-browser@4.20.0)(react@19.1.0)':
     dependencies:
-      '@azure/msal-browser': 4.13.2
+      '@azure/msal-browser': 4.20.0
       react: 19.1.0
 
   '@babel/code-frame@7.27.1':
