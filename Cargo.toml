@@ -20,7 +20,7 @@ regex = "1.11.1"
 reqwest = { version = "0.12.22", default-features = false, features = ["http2", "blocking", "json"] }
 scan_dir = "0.3.3"
 serde = "1.0.219"
-serde_json = "1.0.142"
+serde_json = "1.0.143"
 tokenizers = { version = "0.21.4", default-features = false }
 tokio = "1.47.1"
 warp = "0.3.7"
