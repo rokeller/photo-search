@@ -12,7 +12,7 @@ candle-core = "0.9.0"
 candle-nn = "0.9.0"
 candle-transformers = "0.9.0"
 chrono = "0.4.41"
-clap = "4.5.45"
+clap = "4.5.46"
 image = { version = "0.25.6", default-features = false }
 json = "0.12.4"
 nom-exif = "2.5.4"
