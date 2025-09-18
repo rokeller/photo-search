@@ -16,7 +16,7 @@ clap = "4.5.47"
 image = { version = "0.25.6", default-features = false }
 json = "0.12.4"
 nom-exif = "2.5.4"
-regex = "1.11.1"
+regex = "1.11.2"
 reqwest = { version = "0.12.23", default-features = false, features = ["http2", "blocking", "json"] }
 scan_dir = "0.3.3"
 serde = "1.0.219"
