@@ -182,11 +182,6 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
     const [notAfter, setNotAfter] = React.useState<Date>();
     const [onThisDay, setOnThisDay] = React.useState<Date>();
 
-    React.useEffect(() => {
-        PhotoService.subscribe('photoFilterChanged', onFiltersChanged);
-        return () => PhotoService.unsubscribe('photoFilterChanged', onFiltersChanged);
-    });
-
     function onChangeTab(_: React.SyntheticEvent, newTab: number) {
         setTab(newTab);
     }
@@ -239,6 +234,11 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
             }
         }
     }
+
+    React.useEffect(() => {
+        PhotoService.subscribe('photoFilterChanged', onFiltersChanged);
+        return () => PhotoService.unsubscribe('photoFilterChanged', onFiltersChanged);
+    });
 
     const minSearchScoreVal = minScoreSearch !== undefined ? Math.round(minScoreSearch * 100) : 0;
     const minSimilarScoreVal = minScoreSimilar !== undefined ? Math.round(minScoreSimilar * 100) : 0;
