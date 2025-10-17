@@ -5,6 +5,7 @@ use candle_core::{Device, IndexOp, Tensor};
 use candle_nn::{Linear, Module, VarBuilder};
 use candle_transformers::models::distilbert::{Config, DistilBertModel, DTYPE};
 use tokenizers::Tokenizer;
+
 pub struct Model {
     model: DistilBertModel,
     dense: Linear,
