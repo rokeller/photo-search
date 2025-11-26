@@ -9,7 +9,7 @@ require (
 	github.com/disintegration/imaging v1.6.2 // direct
 	github.com/golang/glog v1.2.5 // direct
 	github.com/gorilla/mux v1.8.1 // direct
-	github.com/qdrant/go-client v1.16.1 // direct
+	github.com/qdrant/go-client v1.16.2 // direct
 	google.golang.org/grpc v1.77.0 // direct
 )
 
