@@ -38,7 +38,7 @@ jobs:
           docker image save ${{ env.IMAGE_NAME_WEB }} \
             -o ${{ env.FILE_OCI_WEB }}
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ env.ARTIFACT_WEB }}
           path: ${{ env.FILE_OCI_WEB }}
@@ -99,12 +99,12 @@ jobs:
           docker image save ${{ env.IMAGE_NAME_INDEXING }} \
             -o ${{ env.FILE_OCI_INDEXING }}
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ env.ARTIFACT_EMBEDDING }}
           path: ${{ env.FILE_OCI_EMBEDDING }}
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ env.ARTIFACT_INDEXING }}
           path: ${{ env.FILE_OCI_INDEXING }}
