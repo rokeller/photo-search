@@ -11,7 +11,7 @@ anyhow = "1.0.100"
 candle-core = "0.9.0"
 candle-nn = "0.9.0"
 candle-transformers = "0.9.0"
-chrono = "0.4.42"
+chrono = "0.4.43"
 clap = "4.5.54"
 image = { version = "0.25.9", default-features = false }
 json = "0.12.4"
