@@ -8,9 +8,10 @@ members = [
 
 [workspace.dependencies]
 anyhow = "1.0.102"
-candle-core = "0.9.1"
-candle-nn = "0.9.1"
-candle-transformers = "0.9.1"
+bytes = "1.11.1"
+candle-core = "=0.9.1"
+candle-nn = "=0.9.1"
+candle-transformers = "=0.9.1"
 chrono = "0.4.43"
 clap = "4.5.56"
 image = { version = "0.25.9", default-features = false }
