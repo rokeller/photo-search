@@ -9,7 +9,7 @@ members = [
 [workspace.dependencies]
 anyhow = "1.0.102"
 bytes = "1.11.1"
-candle-core = "=0.9.1"
+candle-core = "=0.10.0"
 candle-nn = "=0.9.1"
 candle-transformers = "=0.9.1"
 chrono = "0.4.44"
