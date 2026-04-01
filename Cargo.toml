@@ -10,7 +10,7 @@ members = [
 anyhow = "1.0.102"
 bytes = "1.11.1"
 candle-core = "=0.9.1"
-candle-nn = "=0.9.1"
+candle-nn = "=0.10.0"
 candle-transformers = "=0.9.1"
 chrono = "0.4.44"
 clap = "4.6.0"
