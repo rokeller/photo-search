@@ -14,7 +14,7 @@ require (
 require gopkg.in/yaml.v3 v3.0.1
 
 require (
-	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	golang.org/x/image v0.38.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
