@@ -23,5 +23,5 @@ scan_dir = "0.3.3"
 serde = "1.0.228"
 serde_json = "1.0.149"
 tokenizers = { version = "0.22.2", default-features = false }
-tokio = "1.51.1"
+tokio = "1.52.1"
 warp = "0.4.2"
