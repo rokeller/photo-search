@@ -4,8 +4,8 @@ import React from 'react';
 
 export default function PerfectCentered({ children }: React.PropsWithChildren) {
     return (
-        <Box display='flex' justifyContent='center' alignItems='center' height={'100vh'}>
-            <Stack direction='column' justifyContent='space-between'>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', }}>
+            <Stack direction='column' sx={{ justifyContent: 'space-between', }}>
                 {children}
             </Stack>
         </Box>

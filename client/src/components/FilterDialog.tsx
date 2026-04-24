@@ -97,6 +97,7 @@ function TimestampSelector(props: React.PropsWithChildren<TimestampSelectorProps
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEnabled(timestamp !== undefined);
     }, [timestamp,])
 
@@ -139,6 +140,7 @@ function DateSelector(props: React.PropsWithChildren<DateSelectorProps>) {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEnabled(date !== undefined);
     }, [date,])
 
@@ -276,7 +278,7 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                             usually quite rare.
                         </Typography>
                     </Box>
-                    <Box mt={2}>
+                    <Box sx={{ mt: 2, }}>
                         <Typography variant='body1'>
                             Minimum similarity score
                         </Typography>
@@ -307,7 +309,7 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                         </TimestampSelector>
                     </Box>
 
-                    <Box mt={2}>
+                    <Box sx={{ mt: 2, }}>
                         <TimestampSelector label='Not after' setter={setNotAfter} timestamp={notAfter}>
                             <Typography variant='body2'>
                                 Show only photos with a timestamp (local time of where
@@ -316,7 +318,7 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                         </TimestampSelector>
                     </Box>
 
-                    <Box mt={2}>
+                    <Box sx={{ mt: 2, }}>
                         {
                             notBefore !== undefined && notAfter !== undefined &&
                                 notBefore > notAfter ?
@@ -334,7 +336,7 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                         </Button>
                     </Box>
 
-                    <Box mt={2}>
+                    <Box sx={{ mt: 2, }}>
                         <DateSelector label='On this day' setter={setOnThisDay} date={onThisDay}>
                             <Typography variant='body2'>
                                 Show only photos with a timestamp (local time of where
