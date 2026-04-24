@@ -36,7 +36,7 @@ function AppProxyWithMsal() {
 
     const content = msal === undefined ?
         <PerfectCentered>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }} alignItems='center'>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', }}>
                 <CircularProgress />
                 <Typography variant='body2'>
                     Please wait while we're setting things up

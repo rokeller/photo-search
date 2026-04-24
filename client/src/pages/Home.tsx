@@ -5,7 +5,7 @@ import PerfectCentered from '../components/PerfectCentered';
 export default function Home() {
     return (
         <PerfectCentered>
-            <Box padding={2}>
+            <Box sx={{ padding: 2 }}>
                 <Typography component='h1' variant='h4'>
                     Welcome to Photo Search.
                 </Typography>

@@ -15,7 +15,7 @@ export default function Login() {
 
                     <LoginButton />
 
-                    <Typography sx={{ textAlign: 'center' }} variant='body2' mt={2}>
+                    <Typography sx={{ textAlign: 'center', mt: 2, }} variant='body2'>
                         &copy; 2023 - {new Date().getFullYear()} by flrx39.net
                     </Typography>
                 </Box>

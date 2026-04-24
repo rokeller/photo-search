@@ -135,6 +135,7 @@ export default function PhotoTile({ details, resultIndex, onView }: PhotoTilePro
     }
 
     React.useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadPhoto();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [details]);
@@ -145,7 +146,7 @@ export default function PhotoTile({ details, resultIndex, onView }: PhotoTilePro
 
     return (
         <Paper>
-            <Stack direction='column' justifyContent='center'>
+            <Stack direction='column' sx={{ justifyContent: 'center', }}>
                 <Box sx={{ position: 'relative', textAlign: 'center', }}>
                     <PhotoWithRetry details={details} photoUrl={photoUrl}
                         preview onClick={onView} onRetry={loadPhoto} />

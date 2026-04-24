@@ -29,7 +29,7 @@ const Photo = styled('img')({
 export default function PhotoWithRetry({ preview, details, photoUrl, onClick, onRetry }: PhotoWithRetryProps) {
     if (photoUrl === undefined) {
         return (
-            <Stack height={360} direction='column' justifyContent='center'>
+            <Stack direction='column' sx={{ height: 360, justifyContent: 'center', }}>
                 <Typography variant='body2'>Failed to load preview.</Typography>
                 <Box>
                     <Button variant='outlined' size='small' onClick={onRetry}>Retry</Button>

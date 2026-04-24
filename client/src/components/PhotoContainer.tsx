@@ -42,7 +42,7 @@ export default function PhotoContainer({ photos, onLoadMore }: PhotoContainerPro
 
     if (photos && photos.length <= 0) {
         return (
-            <Box display='flex' justifyContent='center'>
+            <Box sx={{ display: 'flex', justifyContent: 'center', }}>
                 No photos found. If you have filters set, try changing or removing them.
             </Box>
         )

@@ -25,13 +25,14 @@ export default function ViewPhoto({ photoId, hide }: ViewPhotoProps) {
     };
 
     React.useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadPhoto();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [photoId]);
 
     return (
         <Paper sx={{ p: 1, width: '100vw', height: '100vh', }}>
-            <Box display='flex' justifyContent='center' width='100%' height='100%'>
+            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', height: '100%', }}>
                 <PhotoWithRetry preview={false} photoUrl={photoUrl} onRetry={loadPhoto} />
             </Box>
             <Button aria-label='close' onClick={hide} color='secondary'

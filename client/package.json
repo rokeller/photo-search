@@ -15,14 +15,14 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.10",
-    "@mui/icons-material": "^7.3.10",
-    "@mui/lab": "7.0.1-beta.23",
-    "@mui/material": "^7.3.10",
+    "@mui/icons-material": "^9.0.0",
+    "@mui/lab": "9.0.0-beta.2",
+    "@mui/material": "^9.0.0",
     "prop-types": "^15.8.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.1",
-    "react-toastify": "^11.0.5"
+    "react-router-dom": "^7.14.2",
+    "react-toastify": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.5",
@@ -30,16 +30,16 @@
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.58.2",
-    "@typescript-eslint/parser": "^8.58.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.4",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^17.5.0",
     "svgo": "^4.0.1",
-    "typescript": "^5.9.3",
-    "vite": "^8.0.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
     "vite-plugin-image-optimizer": "^2.0.3"
   }
 }
