@@ -19,7 +19,7 @@
     "@mui/lab": "9.0.0-beta.2",
     "@mui/material": "^9.0.0",
     "prop-types": "^15.8.1",
-    "react": "^19.2.5",
+    "react": "^19.2.6",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2",
     "react-toastify": "^11.1.0"
