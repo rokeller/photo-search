@@ -224,7 +224,7 @@ class PhotoServiceImpl {
     }
 
     private async authenticateRequest() {
-        let accessToken: string | null = null;
+        let accessToken: string | undefined;
         const headers: Record<string, string> = {};
 
         const msalInstance = await this.msalAppPromise;
