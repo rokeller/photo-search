@@ -12,7 +12,7 @@ bytes = "1.11.1"
 candle-core = "=0.10.2"
 candle-nn = "=0.10.2"
 candle-transformers = "=0.10.2"
-chrono = "0.4.44"
+chrono = "0.4.45"
 clap = "4.6.0"
 image = { version = "0.25.10", default-features = false }
 json = "0.12.4"
