@@ -3,7 +3,7 @@ module github.com/rokeller/photo-search/srv/web
 go 1.25.0
 
 require (
-	github.com/coreos/go-oidc/v3 v3.18.0
+	github.com/coreos/go-oidc/v3 v3.19.0
 	github.com/disintegration/imaging v1.6.2 // direct
 	github.com/golang/glog v1.2.5 // direct
 	github.com/gorilla/mux v1.8.1 // direct
