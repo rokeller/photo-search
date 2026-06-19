@@ -3,23 +3,23 @@ module github.com/rokeller/photo-search/srv/web
 go 1.25.0
 
 require (
-	github.com/coreos/go-oidc/v3 v3.18.0
+	github.com/coreos/go-oidc/v3 v3.19.0
 	github.com/disintegration/imaging v1.6.2 // direct
 	github.com/golang/glog v1.2.5 // direct
 	github.com/gorilla/mux v1.8.1 // direct
-	github.com/qdrant/go-client v1.18.1 // direct
-	google.golang.org/grpc v1.81.0 // direct
+	github.com/qdrant/go-client v1.18.2 // direct
+	google.golang.org/grpc v1.81.1 // direct
 )
 
 require gopkg.in/yaml.v3 v3.0.1
 
 require (
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
-	golang.org/x/image v0.40.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/image v0.43.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
