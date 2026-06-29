@@ -7,7 +7,7 @@ require (
 	github.com/disintegration/imaging v1.6.2 // direct
 	github.com/golang/glog v1.2.5 // direct
 	github.com/gorilla/mux v1.8.1 // direct
-	github.com/qdrant/go-client v1.18.2 // direct
+	github.com/qdrant/go-client v1.18.3 // direct
 	google.golang.org/grpc v1.81.1 // direct
 )
 
