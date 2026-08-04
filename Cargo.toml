@@ -7,21 +7,21 @@ members = [
 ]
 
 [workspace.dependencies]
-anyhow = "1.0.103"
-bytes = "1.12.0"
+anyhow = "1.0.104"
+bytes = "1.12.1"
 candle-core = "=0.11.0"
 candle-nn = "=0.11.0"
 candle-transformers = "=0.11.0"
 chrono = "0.4.45"
-clap = "4.6.0"
+clap = "4.6.5"
 image = { version = "0.25.10", default-features = false }
 json = "0.12.4"
 nom-exif = "2.8.0"
-regex = "1.12.4"
+regex = "1.13.1"
 reqwest = { version = "0.13.4", default-features = false, features = ["http2", "blocking", "json", "query"] }
 scan_dir = "0.3.3"
 serde = "1.0.228"
 serde_json = "1.0.149"
 tokenizers = { version = "0.23.1", default-features = false }
-tokio = "1.52.3"
+tokio = "1.53.1"
 warp = "0.4.3"
