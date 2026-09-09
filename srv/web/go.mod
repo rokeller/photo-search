@@ -7,8 +7,8 @@ require (
 	github.com/disintegration/imaging v1.6.2 // direct
 	github.com/golang/glog v1.2.5 // direct
 	github.com/gorilla/mux v1.8.1 // direct
-	github.com/qdrant/go-client v1.19.0 // direct
-	google.golang.org/grpc v1.83.0 // direct
+	github.com/qdrant/go-client v1.19.1 // direct
+	google.golang.org/grpc v1.83.2 // direct
 )
 
 require gopkg.in/yaml.v3 v3.0.1
