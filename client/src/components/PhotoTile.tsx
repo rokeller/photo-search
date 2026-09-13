@@ -14,7 +14,7 @@ import Stack from '@mui/material/Stack';
 import { SxProps } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { PhotoFilter, PhotoResultItem, PhotoService } from '../services';
 import PhotoWithRetry from './PhotoWithRetry';
 
