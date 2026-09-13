@@ -2,7 +2,7 @@ import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-reac
 import {
     RouterProvider, createBrowserRouter,
     useParams
-} from 'react-router-dom';
+} from 'react-router';
 import { Flip, ToastContainer } from 'react-toastify';
 import { SearchPhotoResults, SimilarPhotoResults } from './components/PhotoResults';
 import MainLayout from './layouts/MainLayout';

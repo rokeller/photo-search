@@ -12,7 +12,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import React from 'react';
-import { Outlet, Link as RouteLink } from 'react-router-dom';
+import { Outlet, Link as RouteLink } from 'react-router';
 import FilterDialog from '../components/FilterDialog';
 import SearchBox from '../components/SearchBox';
 import { PhotoService } from '../services';

@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
-import { Link as RouteLink, useRouteError } from 'react-router-dom';
+import { Link as RouteLink, useRouteError } from 'react-router';
 import PerfectCentered from '../components/PerfectCentered';
 
 export default function ErrorPage() {
