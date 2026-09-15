@@ -1,6 +1,4 @@
-import { useMsal } from '@azure/msal-react';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
-import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import AppBar from '@mui/material/AppBar';
 import Badge from '@mui/material/Badge';
@@ -14,8 +12,9 @@ import Typography from '@mui/material/Typography';
 import React from 'react';
 import { Outlet, Link as RouteLink } from 'react-router';
 import FilterDialog from '../components/FilterDialog';
+import { LogoutButton } from '../components/LogoutButton';
 import SearchBox from '../components/SearchBox';
-import { PhotoService } from '../services';
+import { PhotoService } from '../services/PhotoService';
 
 const version = import.meta.env.VITE_APP_VERSION || 'under-development';
 const mobileMenuId = 'appbar-menu-mobile';
@@ -39,25 +38,6 @@ function FilterIconButton({ onClick, }: { onClick?: () => void, }) {
             <Badge color='error' badgeContent={filtersCount}>
                 <FilterAltOutlinedIcon />
             </Badge>
-        </IconButton>
-    );
-}
-
-function LogoutIconButton() {
-    const { instance } = useMsal();
-
-    async function handleLogout() {
-        try {
-            await instance.logoutPopup();
-        } catch (e) {
-            console.error('logout failed', e);
-        }
-    }
-
-    return (
-        <IconButton aria-label='logout' title='Logout' size='large'
-            onClick={handleLogout}>
-            <LogoutOutlinedIcon />
         </IconButton>
     );
 }
@@ -99,7 +79,7 @@ export default function MainLayout({ children }: React.PropsWithChildren) {
                 <p>Filters</p>
             </MenuItem>
             <MenuItem>
-                <LogoutIconButton />
+                <LogoutButton />
                 <p>Log out</p>
             </MenuItem>
         </Menu>
@@ -121,7 +101,7 @@ export default function MainLayout({ children }: React.PropsWithChildren) {
                 {/* show icon buttons for md and above */}
                 <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                     <FilterIconButton onClick={showFilters} />
-                    <LogoutIconButton />
+                    <LogoutButton />
                 </Box>
                 {/* show 'more' small and below */}
                 <Box sx={{ display: { xs: 'flex', md: 'none' } }}>

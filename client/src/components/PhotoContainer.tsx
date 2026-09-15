@@ -5,7 +5,7 @@ import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import React from 'react';
-import { PhotoResultItem } from '../services';
+import { PhotoResultItem } from '../services/Http';
 import PhotoTile from './PhotoTile';
 import ViewPhoto from './ViewPhoto';
 

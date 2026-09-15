@@ -1,13 +1,16 @@
 import React from 'react';
 import { toast } from 'react-toastify';
-import { PhotoResultItem, PhotoResultsResponse, PhotoService, isErrorResponse } from '../services';
+import { isErrorResponse } from '../services/Errors';
+import { Http, PhotoResultItem, PhotoResultsResponse, useHttpService } from '../services/Http';
+import { PhotoService } from '../services/PhotoService';
 import PhotoContainer from './PhotoContainer';
 
 const LIMIT = 12;
-type RetrieveFn<T> = (props: T, offset?: number) => Promise<PhotoResultsResponse>;
+type RetrieveFn<T> = (http: Http, props: T, offset?: number) => Promise<PhotoResultsResponse>;
 
 function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
     const Component = (props: TProps) => {
+        const httpPromise = useHttpService();
         const isUpdating = React.useRef(false);
         const [photos, setPhotos] = React.useState<Array<PhotoResultItem>>();
 
@@ -18,7 +21,8 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
 
             isUpdating.current = true;
             try {
-                const response = await retrieveFn(props, offset);
+                const http = await httpPromise;
+                const response = await retrieveFn(http, props, offset);
                 if (response) {
                     if (offset === undefined || offset <= 0) {
                         // Overwrite the previous set of photos.
@@ -112,18 +116,18 @@ function RecommendError({ error }: ErrorProps) {
     );
 }
 
-async function searchPhotos({ query }: SearchProps, offset?: number): Promise<PhotoResultsResponse> {
+async function searchPhotos(http: Http, { query }: SearchProps, offset?: number): Promise<PhotoResultsResponse> {
     try {
-        return await PhotoService.search({ query, offset, limit: LIMIT });
+        return await http.search({ query, offset, limit: LIMIT });
     } catch (e) {
         toast.error(<SearchError error={e} />);
         return { items: [] };
     }
 }
 
-async function recommendPhotos({ photoId }: RecommendProps, offset?: number): Promise<PhotoResultsResponse> {
+async function recommendPhotos(http: Http, { photoId }: RecommendProps, offset?: number): Promise<PhotoResultsResponse> {
     try {
-        return await PhotoService.recommend({ photoId, offset, limit: LIMIT });
+        return await http.recommend({ photoId, offset, limit: LIMIT });
     } catch (e) {
         toast.error(<RecommendError error={e} />);
         return { items: [] };

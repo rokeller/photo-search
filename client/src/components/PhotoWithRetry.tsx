@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import { PhotoResultItem } from '../services';
+import { PhotoResultItem } from '../services/Http';
 
 interface PhotoWithRetryProps {
     preview: boolean;
@@ -24,6 +24,7 @@ const Photo = styled('img')({
     maxHeight: '100%',
     width: 'auto',
     height: 'auto',
+    objectFit: 'contain',
 });
 
 export default function PhotoWithRetry({ preview, details, photoUrl, onClick, onRetry }: PhotoWithRetryProps) {
