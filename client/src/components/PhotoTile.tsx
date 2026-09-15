@@ -15,7 +15,8 @@ import { SxProps } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import React from 'react';
 import { useNavigate } from 'react-router';
-import { PhotoFilter, PhotoResultItem, PhotoService } from '../services';
+import { PhotoResultItem, useHttpService } from '../services/Http';
+import { PhotoFilter, PhotoService } from '../services/PhotoService';
 import PhotoWithRetry from './PhotoWithRetry';
 
 interface PhotoTileProps {
@@ -121,12 +122,14 @@ function Actions({ photoId, timestamp }: { photoId: string, timestamp?: Date, })
 }
 
 export default function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
+    const httpPromise = useHttpService();
     const timestamp = details.timestamp ? new Date(details.timestamp * 1000) : undefined;
     // A photoUrl of undefined means that we couldn't load the photo but we can try again.
     const [photoUrl, setPhotoUrl] = React.useState<string | undefined>('/please-wait.svg');
     const loadPhoto = async () => {
+        const http = await httpPromise;
         try {
-            const photoUrl = await PhotoService.getPhoto(details.id, 512);
+            const photoUrl = await http.getPhoto(details.id, 512);
             setPhotoUrl(photoUrl);
         } catch (e) {
             console.error('failed to load photo', e);

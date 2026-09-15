@@ -7,7 +7,10 @@ import PerfectCentered from '../components/PerfectCentered';
 export default function Login() {
     return (
         <PerfectCentered>
-            <Card variant='outlined' sx={(theme) => ({ padding: theme.spacing(6), })}>
+            <Card variant='outlined'
+                sx={(theme) => ({
+                    padding: theme.spacing(4),
+                })}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Typography sx={{ textAlign: 'center' }} variant='h6'>
                         You're not logged in.

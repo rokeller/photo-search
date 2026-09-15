@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -30,8 +31,8 @@ func NewPublicServer(ctx *serverContext) *http.Server {
 		serverContext: ctx,
 	}
 
-	wellKnownRouter := mux.PathPrefix("/.well-known").Subrouter()
-	publicCtx.addWellKnown(wellKnownRouter)
+	authRouter := mux.PathPrefix("/.auth").Subrouter()
+	publicCtx.addAuthConfig(authRouter)
 
 	apiRouter := mux.PathPrefix("/api/v1").Subrouter()
 	authMiddleware := NewAuthenticationMiddleware(
@@ -48,31 +49,39 @@ func NewPublicServer(ctx *serverContext) *http.Server {
 	return srv
 }
 
-func (c publicServerContext) addWellKnown(mux *mux.Router) {
-	mux.HandleFunc("/flrx39.net/photoSearch/auth/config", c.handleWellKnownAuthConfig).
-		Methods("GET")
+func (c publicServerContext) addAuthConfig(mux *mux.Router) {
+	mux.HandleFunc("/config.js", c.handleAuthConfig).Methods(http.MethodGet)
 }
 
-func (c publicServerContext) handleWellKnownAuthConfig(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("content-type", "application/json; charset=utf-8")
+func (c publicServerContext) handleAuthConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("content-type", "application/javascript; charset=utf-8")
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(c.serverContext.oauthSettings)
+
+	w.Write([]byte("const ps=globalThis.photoSearch||{};"))
+	w.Write([]byte("ps.auth=ps.auth||{};"))
+	w.Write([]byte(fmt.Sprintf("ps.auth.clientId=%q;",
+		c.serverContext.oauthSettings.ClientId)))
+	w.Write([]byte(fmt.Sprintf("ps.auth.authority=%q;",
+		c.serverContext.oauthSettings.Authority)))
+	w.Write([]byte(fmt.Sprintf("ps.auth.scopes=%q;",
+		c.serverContext.oauthSettings.Scopes)))
+	w.Write([]byte("globalThis.photoSearch=ps;"))
 }
 
 func (c publicServerContext) addV1API(mux *mux.Router) {
 	mux.HandleFunc("/photos/search", c.handleV1SearchPhotos).
-		Methods("POST").
+		Methods(http.MethodPost).
 		HeadersRegexp("Content-Type", "(text|application)/json")
 
 	mux.HandleFunc("/photos/recommend", c.handleV1RecommendPhotos).
-		Methods("POST").
+		Methods(http.MethodPost).
 		HeadersRegexp("Content-Type", "(text|application)/json")
 
 	mux.HandleFunc("/photos/{id}", c.handleV1PhotosGetById).
-		Methods("GET")
+		Methods(http.MethodGet)
 
 	mux.HandleFunc("/photos/{id}/{width}", c.handleV1PhotosWithWidthGetById).
-		Methods("GET")
+		Methods(http.MethodGet)
 }
 
 func (c publicServerContext) handleV1SearchPhotos(w http.ResponseWriter, r *http.Request) {

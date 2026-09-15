@@ -1,14 +1,13 @@
 import { IPublicClientApplication } from '@azure/msal-browser';
 import { useMsal } from '@azure/msal-react';
 import Button from '@mui/material/Button';
-import { getRequest } from '../services/AuthConfig';
 
 async function handleLogin(instance: IPublicClientApplication) {
     try {
-        const req = await getRequest();
-        const res = await instance.loginPopup(req)
+        await instance.loginRedirect();
         if (null == instance.getActiveAccount()) {
-            instance.setActiveAccount(res.account);
+            const acct = instance.getAccount({});
+            instance.setActiveAccount(acct);
             console.log('active account', instance.getActiveAccount());
         }
     } catch (e) {

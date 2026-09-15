@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import React from 'react';
-import { PhotoService } from '../services';
+import { useHttpService } from '../services/Http';
 import PhotoWithRetry from './PhotoWithRetry';
 
 interface ViewPhotoProps {
@@ -12,11 +12,13 @@ interface ViewPhotoProps {
 }
 
 export default function ViewPhoto({ photoId, hide }: ViewPhotoProps) {
+    const httpPromise = useHttpService();
     // A photoUrl of undefined means that we couldn't load the photo but we can try again.
     const [photoUrl, setPhotoUrl] = React.useState<string | undefined>('/please-wait.svg');
     const loadPhoto = async () => {
+        const http = await httpPromise;
         try {
-            const url = await PhotoService.getPhoto(photoId);
+            const url = await http.getPhoto(photoId);
             setPhotoUrl(url);
         } catch (e) {
             console.error('failed to load photo', e);

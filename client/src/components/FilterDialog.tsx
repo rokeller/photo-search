@@ -15,7 +15,7 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import React, { SetStateAction, useEffect } from 'react';
-import { PhotoService } from '../services';
+import { PhotoService } from '../services/PhotoService';
 
 interface FilterSettingsProps {
     open: boolean;

@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => {
         mergeConfig.server = {
             host: true,
             proxy: {
-                '/.well-known': 'http://localhost:8080/',
+                '/.auth': 'http://localhost:8080/',
                 '/api': 'http://localhost:8080/',
             }
         };

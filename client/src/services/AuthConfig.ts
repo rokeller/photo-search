@@ -1,40 +1,39 @@
-import { BrowserCacheLocation, Configuration, PopupRequest } from '@azure/msal-browser';
+import { BrowserCacheLocation, Configuration, PublicClientApplication } from '@azure/msal-browser';
 
-interface AuthConfiguration {
-    clientId: string;
-    authority: string;
-    scopes: string[];
-}
+export const msalConfig: Configuration = {
+    auth: {
+        ...globalThis.photoSearch.auth,
+        redirectUri: '/',
+    },
+    system: {
+        protocolMode: 'OIDC',
+    },
+    cache: {
+        cacheLocation: BrowserCacheLocation.SessionStorage,
+    },
+};
 
-const configPromise = loadConfig();
+export const msalInstance = new PublicClientApplication(msalConfig);
 
-async function loadConfig() {
-    const resp = await fetch('/.well-known/flrx39.net/photoSearch/auth/config');
-    return (await resp.json()) as AuthConfiguration;
-}
+export function useAccessToken(): Promise<string> {
+    const accounts = msalInstance.getAllAccounts();
 
-export async function getMsalConfig() {
-    const config = await configPromise;
-    const msalConfig: Configuration = {
-        auth: {
-            clientId: config.clientId,
-            authority: config.authority,
-            redirectUri: '/',
-            protocolMode: 'OIDC',
-        },
-        cache: {
-            cacheLocation: BrowserCacheLocation.LocalStorage,
-            claimsBasedCachingEnabled: true,
-            storeAuthStateInCookie: true,
-        }
-    };
-
-    return msalConfig;
-}
-
-export async function getRequest() {
-    const config = await configPromise;
-    const req: PopupRequest = { scopes: config.scopes };
-
-    return req;
+    if (accounts.length > 0) {
+        return msalInstance
+            .initialize()
+            .then(() => msalInstance
+                .acquireTokenSilent({
+                    account: accounts[0],
+                    scopes: globalThis.photoSearch.auth.scopes,
+                })
+                .then((resp) => resp.accessToken)
+            )
+            .catch((error) => {
+                console.error('silen token acquisition failed', error);
+                msalInstance.clearCache();
+                location.reload();
+                throw new Error('not authenticated');
+            });
+    }
+    throw new Error('not authenticated');
 }
