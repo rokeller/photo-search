@@ -8,7 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/golang/glog"
+	"github.com/rokeller/photo-search/internal/web/server"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -20,51 +21,56 @@ var (
 		"The base address of the service calculating embeddings for queries.")
 	photosRootDir = flag.String("photos", "",
 		"The root directory where the photos are located.")
+	spaRootDir = flag.String("spa-dir", "dist",
+		"The path to the SPA root directory.")
+	configPath = flag.String("oauth-config", "config/oauth.yaml",
+		"The path to the oauth.yaml config file.")
 )
 
 func main() {
+	klog.InitFlags(nil)
 	flag.Parse()
+	defer klog.Flush()
+	klog.InfoS("Trying to connect to qdrant", "server", *qdrantAddr, "collection", *qdrantColl)
 
-	glog.Infof("Trying to connect to qdrant at '%s', using collection '%s' ...",
-		*qdrantAddr, *qdrantColl)
-
-	// TODO: validate flags
-
-	srv, err := newServerContext(*qdrantAddr,
+	srv, err := server.NewServerContext(*qdrantAddr,
 		*qdrantColl,
 		*embeddingsServiceBaseUrl,
-		*photosRootDir)
+		*photosRootDir,
+		*configPath,
+		*spaRootDir,
+	)
 	if nil != err {
-		glog.Exitf("Failed to connect to qdrant collection: %v", err)
+		klog.Exitf("Failed to connect to qdrant collection: %v", err)
 	}
-	defer srv.conn.Close()
+	defer srv.Close()
 
-	publicSrv := NewPublicServer(srv)
-	internalSrv := NewInternalServer(srv)
+	publicSrv := server.NewPublicServer(srv)
+	internalSrv := server.NewInternalServer(srv)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 
-	glog.Infof("Running public HTTP server at '%s' ...", publicSrv.Addr)
+	klog.InfoS("Starting public HTTP server", "addr", publicSrv.Addr)
 	go serveHTTP(publicSrv)
 
-	glog.Infof("Running internal HTTP server at '%s' ...", internalSrv.Addr)
+	klog.InfoS("Starting internal HTTP server", "addr", internalSrv.Addr)
 	go serveHTTP(internalSrv)
 
 	defer internalSrv.Close()
 	defer publicSrv.Close()
 
 	s := <-c
-	glog.V(0).Info("Got signal:", s)
+	klog.InfoS("Done", "signal", s)
 }
 
 func serveHTTP(server *http.Server) {
 	if err := server.ListenAndServe(); nil != err {
 		if errors.Is(err, http.ErrServerClosed) {
-			glog.Infof("Server at '%s' successfully shut down.", server.Addr)
+			klog.InfoS("Server successfully shut down", "addrd", server.Addr)
 			return
 		}
 
-		glog.Exitf("Failed to listen at '%s': %v", server.Addr, err)
+		klog.Exitf("Failed to listen at '%s': %v", server.Addr, err)
 	}
 }

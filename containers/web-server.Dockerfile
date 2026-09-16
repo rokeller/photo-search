@@ -1,5 +1,5 @@
 # Build Client
-FROM node:22-alpine AS client
+FROM node:24-alpine AS client
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -22,9 +22,12 @@ FROM golang:1-alpine AS server
 WORKDIR /src
 
 # Now let's build the web server binaries.
-COPY srv/web .
-RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 \
-    go build -a -ldflags '-s -w'
+COPY go.* /src/
+COPY cmd/ /src/cmd
+COPY internal/ /src/internal
+RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build \
+    -a -ldflags '-s -w' \
+    github.com/rokeller/photo-search/cmd/web
 
 # CA certs - we need a decent set of CA certificates so outgoing TLS channels
 # can successfully be established on the below image from scratch.

@@ -38,12 +38,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: 'srv/web/go.mod'
+          go-version-file: 'go.mod'
           cache-dependency-path: |
-            srv/web/go.sum
+            go.sum
 
       - name: Build Web Server
-        run: go build -C srv/web
+        run: go build
 
   build-test-rust:
     runs-on: ubuntu-latest

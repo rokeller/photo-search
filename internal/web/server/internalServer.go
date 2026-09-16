@@ -1,13 +1,13 @@
-package main
+package server
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/golang/glog"
 	"github.com/gorilla/mux"
-	"github.com/rokeller/photo-search/srv/web/models"
+	"github.com/rokeller/photo-search/internal/web/models"
+	"k8s.io/klog/v2"
 )
 
 type internalServerContext struct {
@@ -58,7 +58,7 @@ func (c internalServerContext) handleV1GetIndex(w http.ResponseWriter, r *http.R
 	if pageSizeStr != "" {
 		pageSizeUi64, err := strconv.ParseUint(pageSizeStr, 10, 32)
 		if err != nil {
-			glog.Warningf("Failed to parse page size %q: %v", pageSizeStr, err)
+			klog.Warningf("Failed to parse page size %q: %v", pageSizeStr, err)
 		} else {
 			pageSize = uint32(pageSizeUi64)
 		}
@@ -69,7 +69,7 @@ func (c internalServerContext) handleV1GetIndex(w http.ResponseWriter, r *http.R
 
 	res, err := c.getPhotoPaths(pageSize, offset, r.Context())
 	if err != nil {
-		glog.Errorf("Failed to get paths: %v", err)
+		klog.Errorf("Failed to get paths: %v", err)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
 	} else {
@@ -87,11 +87,12 @@ func (c internalServerContext) handleV1PostToIndex(w http.ResponseWriter, r *htt
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
 	if err := c.upsert(req.Items); nil != err {
-		glog.Errorf("Failed to insert items: %v", err)
+		// TODO: put image path(s)
+		klog.Errorf("Failed to insert items: %v", err)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
 	} else {
-		glog.V(1).Infof("Successfully upserted %d item(s) ...", len(req.Items))
+		klog.V(1).Infof("Successfully upserted %d item(s) ...", len(req.Items))
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
@@ -105,11 +106,12 @@ func (c internalServerContext) handleV1DeleteFromIndex(w http.ResponseWriter, r 
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
 	if err := c.delete(req.Items); nil != err {
-		glog.Errorf("Failed to delete items: %v", err)
+		// TODO: put image path(s)
+		klog.Errorf("Failed to delete items: %v", err)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
 	} else {
-		glog.V(1).Infof("Successfully deleted %d item(s) ...", len(req.Items))
+		klog.V(1).Infof("Successfully deleted %d item(s) ...", len(req.Items))
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"net/http"
@@ -6,12 +6,23 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/golang/glog"
+	"k8s.io/klog/v2"
 )
 
 type spaHandler struct {
 	staticPath string
 	indexPath  string
+
+	fs http.Handler
+}
+
+func newSpaHandler(staticPath string) spaHandler {
+	return spaHandler{
+		staticPath: staticPath,
+		indexPath:  "index.html",
+
+		fs: http.FileServer(http.Dir(staticPath)),
+	}
 }
 
 // ServeHTTP inspects the URL path to locate a file within the static dir
@@ -20,7 +31,7 @@ type spaHandler struct {
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Join cleans results to prevent directory traversal.
 	path := filepath.Join(h.staticPath, r.URL.Path)
-	glog.V(2).Infof("ServeStatic: %s (%s)", path, r.URL.Path)
+	klog.V(2).Infof("ServeStatic: %s (%s)", path, r.URL.Path)
 
 	// Check if there's a file at the given path.
 	fi, err := os.Stat(path)
@@ -44,5 +55,5 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// deserve some caching.
 		w.Header().Add("cache-control", "max-age=86400")
 	}
-	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+	h.fs.ServeHTTP(w, r)
 }

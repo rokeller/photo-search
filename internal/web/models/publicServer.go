@@ -34,6 +34,8 @@ type PhotoResultItem struct {
 	Id        string `json:"id"`
 	Path      string `json:"path"`
 	Timestamp *int64 `json:"timestamp,omitempty"`
+	// Camera    *string `json:"cam"`
+	// Score     float32 `json:"score"`
 }
 
 type EmbeddingResponse struct {

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -14,14 +14,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/golang/glog"
 	pb "github.com/qdrant/go-client/qdrant"
-	"github.com/rokeller/photo-search/srv/web/models"
+	"github.com/rokeller/photo-search/internal/web/models"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v3"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -39,6 +39,7 @@ type serverContext struct {
 	coll                     string
 	embeddingsServiceBaseUrl string
 	photosRootDir            string
+	spaRootDir               string
 
 	oauthSettings models.OAuthSettings
 }
@@ -48,11 +49,11 @@ type photoPathsResult struct {
 	NextOffset *string  `json:"next_offset,omitempty"`
 }
 
-func newServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir string) (*serverContext, error) {
+func NewServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir, configPath, spaRootDir string) (*serverContext, error) {
 	conn, err := grpc.NewClient(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if nil != err {
-		glog.Exitf("Failed to connect to qdrant '%s' gRPC: %v", addr, err)
+		klog.Exitf("Failed to connect to qdrant '%s' gRPC: %v", addr, err)
 		return nil, err
 	}
 
@@ -61,17 +62,22 @@ func newServerContext(addr, coll, embeddingsServiceBaseUrl, photosRootDir string
 		coll:                     coll,
 		embeddingsServiceBaseUrl: strings.TrimSuffix(embeddingsServiceBaseUrl, "/"),
 		photosRootDir:            photosRootDir,
+		spaRootDir:               spaRootDir,
 
-		oauthSettings: loadOAuthSettings(),
+		oauthSettings: loadOAuthSettings(configPath),
 	}
 
 	return ctx.ensureCollection()
 }
 
-func loadOAuthSettings() models.OAuthSettings {
-	file, err := os.Open("config/oauth.yaml")
+func (s *serverContext) Close() error {
+	return s.conn.Close()
+}
+
+func loadOAuthSettings(configPath string) models.OAuthSettings {
+	file, err := os.Open(configPath)
 	if nil != err {
-		glog.Exitf("Failed to read oauth.yaml: %v", err)
+		klog.Exitf("Failed to read %q: %v", configPath, err)
 	}
 
 	defer file.Close()
@@ -80,7 +86,7 @@ func loadOAuthSettings() models.OAuthSettings {
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&settings)
 	if nil != err {
-		glog.Exitf("Failed to parse oauth.yaml: %v", err)
+		klog.Exitf("Failed to parse %q: %v", configPath, err)
 	}
 
 	return settings
@@ -101,11 +107,11 @@ func (c *serverContext) ensureCollection() (*serverContext, error) {
 			return c.createCollection()
 
 		case codes.Unavailable, codes.DeadlineExceeded:
-			glog.Errorf("Vector database is unavailable: %v; grpc code = %v", err, code)
+			klog.Errorf("Vector database is unavailable: %v; grpc code = %v", err, code)
 			return nil, VectorDatabaseUnavailable
 
 		default:
-			glog.Errorf("Failed to get collection details for '%s': %v; grpc code = %v", c.coll, err, code)
+			klog.Errorf("Failed to get collection details for '%s': %v; grpc code = %v", c.coll, err, code)
 			return nil, err
 		}
 	}
@@ -114,7 +120,7 @@ func (c *serverContext) ensureCollection() (*serverContext, error) {
 }
 
 func (c *serverContext) createCollection() (*serverContext, error) {
-	glog.V(1).Infof("Collection '%s' does not exist, creating it ...", c.coll)
+	klog.V(1).Infof("Collection '%s' does not exist, creating it ...", c.coll)
 
 	client := pb.NewCollectionsClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -133,11 +139,11 @@ func (c *serverContext) createCollection() (*serverContext, error) {
 	})
 	if nil != err {
 		defer c.conn.Close()
-		glog.Errorf("Failed to create collection '%s': %v", c.coll, err)
+		klog.Errorf("Failed to create collection '%s': %v", c.coll, err)
 		return nil, err
 	}
 
-	glog.Infof("Collection '%s' successfully created.", c.coll)
+	klog.Infof("Collection '%s' successfully created.", c.coll)
 
 	return c, nil
 }
@@ -213,7 +219,7 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 				Kind: &pb.Value_IntegerValue{IntegerValue: *item.Payload.Timestamp},
 			}
 		} else {
-			glog.Warningf("Image at path '%s' has no timestamp.", item.Payload.Path)
+			klog.Warningf("Image at path '%s' has no timestamp.", item.Payload.Path)
 		}
 
 		points[i] = &pb.PointStruct{
@@ -243,7 +249,7 @@ func (c *serverContext) upsert(items []*models.ItemToIndex) error {
 	})
 	if nil != err {
 		code := status.Code(err)
-		glog.Errorf("Failed to upsert points: %v; grpc code: %v", err, code)
+		klog.Errorf("Failed to upsert points: %v; grpc code: %v", err, code)
 
 		switch code {
 		case codes.Unavailable, codes.DeadlineExceeded:
@@ -283,7 +289,7 @@ func (c *serverContext) delete(items []string) error {
 	})
 	if nil != err {
 		code := status.Code(err)
-		glog.Errorf("Failed to delete points: %v; grpc code: %v", err, code)
+		klog.Errorf("Failed to delete points: %v; grpc code: %v", err, code)
 
 		switch code {
 		case codes.Unavailable, codes.DeadlineExceeded:
@@ -305,7 +311,7 @@ func (c *serverContext) search(
 ) (*models.PhotoResultsResponse, error) {
 	v, err := c.getEmbedding(query)
 	if nil != err {
-		glog.Errorf("Failed to get embedding for query '%s': %v", query, err)
+		klog.Errorf("Failed to get embedding for query '%s': %v", query, err)
 		return nil, err
 	}
 
@@ -319,7 +325,7 @@ func (c *serverContext) search(
 	}
 
 	qdrantFilter := makeQdrantFilter(filter)
-	glog.V(1).Infof("Search filter: %v", qdrantFilter)
+	klog.V(1).Infof("Search filter: %v", qdrantFilter)
 
 	req := &pb.SearchPoints{
 		CollectionName: c.coll,
@@ -338,7 +344,7 @@ func (c *serverContext) search(
 	r, err := client.Search(ctx, req)
 	if nil != err {
 		code := status.Code(err)
-		glog.Errorf("Failed to search vectors: %v; grpc code: %v", err, code)
+		klog.Errorf("Failed to search vectors: %v; grpc code: %v", err, code)
 
 		switch code {
 		case codes.Unavailable, codes.DeadlineExceeded:
@@ -368,7 +374,7 @@ func (c *serverContext) recommend(
 	}
 
 	qdrantFilter := makeQdrantFilter(filter)
-	glog.V(1).Infof("Recommend filter: %v", qdrantFilter)
+	klog.V(1).Infof("Recommend filter: %v", qdrantFilter)
 
 	req := &pb.RecommendPoints{
 		CollectionName: c.coll,
@@ -390,7 +396,7 @@ func (c *serverContext) recommend(
 	r, err := client.Recommend(ctx, req)
 	if nil != err {
 		code := status.Code(err)
-		glog.Errorf("Failed to recommend similar for '%s': %v; grpc code: %v",
+		klog.Errorf("Failed to recommend similar for '%s': %v; grpc code: %v",
 			id, err, code)
 
 		switch code {
@@ -423,7 +429,7 @@ func (c *serverContext) getPayloadById(id string) (map[string]*pb.Value, error) 
 	})
 	if nil != err {
 		code := status.Code(err)
-		glog.Errorf("Failed to get point details for '%s': %v; grpc code: %v",
+		klog.Errorf("Failed to get point details for '%s': %v; grpc code: %v",
 			id, err, code)
 
 		switch code {
@@ -462,7 +468,7 @@ func (c *serverContext) getEmbedding(query string) ([]float32, error) {
 			return nil, EmbeddingServerUnavailable
 		}
 
-		glog.Errorf("Failed to retrieve embedding for '%s': %v", query, err)
+		klog.Errorf("Failed to retrieve embedding for '%s': %v", query, err)
 		return nil, err
 	}
 
@@ -470,7 +476,7 @@ func (c *serverContext) getEmbedding(query string) ([]float32, error) {
 
 	respBody := &models.EmbeddingResponse{}
 	if err := json.NewDecoder(resp.Body).Decode(respBody); nil != err {
-		glog.Errorf("Failed to decode embedding response: %v", err)
+		klog.Errorf("Failed to decode embedding response: %v", err)
 		return nil, err
 	}
 
@@ -505,7 +511,7 @@ func exifTagsToPayloadFields(tags map[string]any) map[string]*pb.Value {
 	for k, v := range tags {
 		val, err := exifTagValueToFieldValue(v)
 		if nil != err {
-			glog.Errorf("Failed to convert value '%v' to qdrant field value: %v", v, err)
+			klog.Errorf("Failed to convert value '%v' to qdrant field value: %v", v, err)
 		}
 		result[k] = val
 	}
@@ -553,7 +559,7 @@ func exifTagValueToFieldValue(v any) (*pb.Value, error) {
 		return &pb.Value{Kind: &pb.Value_NullValue{NullValue: pb.NullValue_NULL_VALUE}}, nil
 
 	default:
-		glog.V(1).Infof("Unsupported tag value type: %v", v)
+		klog.V(1).Infof("Unsupported tag value type: %v", v)
 		return nil, errors.New("unsupported tag value type")
 	}
 }
@@ -573,6 +579,28 @@ func getTimestampFromPayload(payload map[string]*pb.Value) *int64 {
 	return &val
 }
 
+// func getCameraFromPayload(payload map[string]*pb.Value) *string {
+// 	makeVal := getExifFieldFromPayload(payload, EXIF_CAMERA_MAKE)
+// 	modelVal := getExifFieldFromPayload(payload, EXIF_CAMERA_Model)
+
+// 	if nil == makeVal && nil == modelVal {
+// 		return nil
+// 	}
+
+// 	var result string
+// 	if nil != makeVal {
+// 		result = makeVal.GetStringValue()
+
+// 		if nil != modelVal {
+// 			result += fmt.Sprintf(" (%s)", modelVal.GetStringValue())
+// 		}
+// 	} else {
+// 		result = modelVal.GetStringValue()
+// 	}
+
+// 	return &result
+// }
+
 func getOrientationFromPayload(payload map[string]*pb.Value) *int64 {
 	field := getExifFieldFromPayload(payload, EXIF_ORIENTATION)
 	if nil == field {
@@ -588,7 +616,7 @@ func getOrientationFromPayload(payload map[string]*pb.Value) *int64 {
 		return &f.IntegerValue
 	}
 
-	glog.Warning("Tag 'Orientation' is neither float64 nor int64.")
+	klog.Warning("Tag 'Orientation' is neither float64 nor int64.")
 
 	return nil
 }
@@ -643,7 +671,7 @@ func makeQdrantFilter(filter *models.PhotoFilter) *pb.Filter {
 	if nil != filter.OnThisDay {
 		timestamp := time.Unix(*filter.OnThisDay, 0)
 		curYear, curMonth, curDay := timestamp.Date()
-		glog.V(2).Infof("Create filter for on-this-day %v", timestamp)
+		klog.V(2).Infof("Create filter for on-this-day %v", timestamp)
 
 		for year := 2000; year <= curYear+1; year++ {
 			startOfDay := time.Date(year, curMonth, curDay, 0, 0, 0, 0, time.UTC)
