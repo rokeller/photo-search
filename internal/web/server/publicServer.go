@@ -93,12 +93,12 @@ func (c publicServerContext) handleV1SearchPhotos(w http.ResponseWriter, r *http
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
 	limit := uint(10)
-	if nil != req.Limit {
+	if req.Limit != nil {
 		limit = *req.Limit
 	}
 
 	res, err := c.search(req.Query, limit, req.Offset, req.Filter)
-	if nil != err {
+	if err != nil {
 		c.respondForError(err, w)
 	} else {
 		w.WriteHeader(200)
@@ -113,12 +113,12 @@ func (c publicServerContext) handleV1RecommendPhotos(w http.ResponseWriter, r *h
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
 	limit := uint(10)
-	if nil != req.Limit {
+	if req.Limit != nil {
 		limit = *req.Limit
 	}
 
 	res, err := c.recommend(req.Id, limit, req.Offset, req.Filter)
-	if nil != err {
+	if err != nil {
 		c.respondForError(err, w)
 	} else {
 		w.WriteHeader(200)
@@ -131,7 +131,7 @@ func (c publicServerContext) handleV1PhotosGetById(w http.ResponseWriter, r *htt
 	id := vars["id"]
 
 	payload, err := c.getPayloadById(id)
-	if nil != err {
+	if err != nil {
 		c.respondForError(err, w)
 	} else {
 		relPath := getPathFromPayload(payload)
@@ -147,12 +147,12 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 	widthStr := vars["width"]
 
 	width, err := strconv.Atoi(widthStr)
-	if nil != err {
+	if err != nil {
 		w.WriteHeader(400)
 	}
 
 	payload, err := c.getPayloadById(id)
-	if nil != err {
+	if err != nil {
 		c.respondForError(err, w)
 		return
 	}
@@ -160,18 +160,18 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 	relPath := getPathFromPayload(payload)
 	absPath := path.Join(c.photosRootDir, *relPath)
 	image, err := resizeImage(absPath, width)
-	if nil != err {
+	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
 
 	orientation := getOrientationFromPayload(payload)
-	if nil != orientation {
+	if orientation != nil {
 		// Apply the reverse transformation of the orientation in the EXIF tags
 		// to put the photo into the right shape again.
 		image = realignImage(image, *orientation)
 	} else {
-		klog.V(1).Infof("Missing 'Orientation' tag in '%s'.", *relPath)
+		klog.V(1).InfoS("Missing 'Orientation' tag", "path", *relPath)
 	}
 
 	w.Header().Add("cache-control", "max-age=31556736, immutable")
@@ -200,7 +200,7 @@ func (c publicServerContext) respondForError(err error, w http.ResponseWriter) {
 func resizeImage(path string, newWidth int) (image.Image, error) {
 	image, err := imaging.Open(path)
 	if err != nil {
-		klog.Errorf("Failed to open photo file '%s': %v", path, err)
+		klog.ErrorS(err, "Failed to open photo file", "path", path)
 		return nil, err
 	}
 

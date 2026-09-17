@@ -58,7 +58,7 @@ func (c internalServerContext) handleV1GetIndex(w http.ResponseWriter, r *http.R
 	if pageSizeStr != "" {
 		pageSizeUi64, err := strconv.ParseUint(pageSizeStr, 10, 32)
 		if err != nil {
-			klog.Warningf("Failed to parse page size %q: %v", pageSizeStr, err)
+			klog.ErrorS(err, "Failed to parse page size", "str", pageSizeStr)
 		} else {
 			pageSize = uint32(pageSizeUi64)
 		}
@@ -69,7 +69,7 @@ func (c internalServerContext) handleV1GetIndex(w http.ResponseWriter, r *http.R
 
 	res, err := c.getPhotoPaths(pageSize, offset, r.Context())
 	if err != nil {
-		klog.Errorf("Failed to get paths: %v", err)
+		klog.ErrorS(err, "Failed to get paths", "pageSize", pageSize, "offset", offset)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
 	} else {
@@ -86,7 +86,7 @@ func (c internalServerContext) handleV1PostToIndex(w http.ResponseWriter, r *htt
 
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
-	if err := c.upsert(req.Items); nil != err {
+	if err := c.upsert(req.Items); err != nil {
 		klog.ErrorS(err, "Failed to upsert items", req.Items)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
@@ -104,7 +104,7 @@ func (c internalServerContext) handleV1DeleteFromIndex(w http.ResponseWriter, r 
 
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
-	if err := c.delete(req.Items); nil != err {
+	if err := c.delete(req.Items); err != nil {
 		klog.ErrorS(err, "Failed to delete photos from index", "paths", req.Items)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)

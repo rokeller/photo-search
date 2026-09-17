@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -29,12 +30,24 @@ func newSpaHandler(staticPath string) spaHandler {
 // on the SPA handler. If a file is found, it will be served. If not, the
 // file located at the index path on the SPA handler will be served.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Join cleans results to prevent directory traversal.
-	path := filepath.Join(h.staticPath, r.URL.Path)
-	klog.V(2).Infof("ServeStatic: %s (%s)", path, r.URL.Path)
+	basePath, err := filepath.Abs(h.staticPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// Check if there's a file at the given path.
-	fi, err := os.Stat(path)
+	cleanURLPath := path.Clean("/" + r.URL.Path)
+	localPath := filepath.Join(basePath, filepath.FromSlash(cleanURLPath))
+	relPath, err := filepath.Rel(basePath, localPath)
+	if err != nil || relPath == ".." || strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	klog.V(2).InfoS("Serving static file",
+		"localPath", localPath,
+		"urlPath", r.URL.Path)
+	fi, err := os.Stat(localPath)
 	if os.IsNotExist(err) || fi.IsDir() {
 		// No dice, serve index.html instead, with 1d caching.
 		w.Header().Add("cache-control", "max-age=86400")
