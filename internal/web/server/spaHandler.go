@@ -43,7 +43,8 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid path", http.StatusBadRequest)
 		return
 	}
-	if resolvedLocalPath != basePath && !strings.HasPrefix(resolvedLocalPath, basePath+string(os.PathSeparator)) {
+	relPath, err := filepath.Rel(basePath, resolvedLocalPath)
+	if err != nil || relPath == ".." || strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) || filepath.IsAbs(relPath) {
 		http.Error(w, "invalid path", http.StatusBadRequest)
 		return
 	}
