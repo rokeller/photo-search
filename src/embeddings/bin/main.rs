@@ -8,6 +8,7 @@ use std::{
 use anyhow::Result;
 use candle_core::Device;
 use clap::Parser;
+use tokio::signal;
 use warp::Filter;
 
 mod embedding;
@@ -55,7 +56,16 @@ async fn main() -> Result<()> {
 
     println!("Starting server on {} ...", args.binding);
     let server_addr = SocketAddr::from_str(args.binding.as_str())?;
-    warp::serve(routes).run(server_addr).await;
+    warp::serve(routes)
+        .bind(server_addr).await
+        .graceful(async {
+            signal::ctrl_c()
+                .await
+                .expect("failed to listen to shutdown signal");
+            println!("Server shut down.")
+        })
+        .run()
+        .await;
 
     Ok(())
 }
