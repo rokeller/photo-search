@@ -65,7 +65,7 @@ jobs:
         go-version-file: 'go.mod'
     - name: Build Go
       if: ${{ matrix.language == 'go' }}
-      run: go build
+      run: go build github.com/rokeller/photo-search/cmd/...
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
 

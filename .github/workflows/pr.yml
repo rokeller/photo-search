@@ -43,7 +43,7 @@ jobs:
             go.sum
 
       - name: Build Web Server
-        run: go build
+        run: go build github.com/rokeller/photo-search/cmd/...
 
   build-test-rust:
     runs-on: ubuntu-latest
