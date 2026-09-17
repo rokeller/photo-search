@@ -222,4 +222,17 @@ point where your photos are located.
 Photo Search is largely designed to run on Kubernetes, though it can run outside
 of Kubernetes too.
 
+#### qdrant installation
+
+You need to install `qdrant`. It's easy to do so using `helm` and an existing
+Kubernetes cluster.
+
+```bash
+# if the qdrant helm repo isn't added yet:
+helm repo add qdrant https://qdrant.github.io/qdrant-helm
+
+helm repo update
+helm upgrade -i photo-search qdrant/qdrant
+```
+
 TODO: More details on how to run on Kubernetes and outside.
