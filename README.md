@@ -14,7 +14,6 @@ Container images:
 [![Indexing Docker Image Version](https://img.shields.io/docker/v/rokeller/photo-search-indexing?label=photo-search-indexing)](https://hub.docker.com/r/rokeller/photo-search-indexing)
 [![Indexing Docker Image Size](https://img.shields.io/docker/image-size/rokeller/photo-search-indexing?label=photo-search-indexing)](https://hub.docker.com/r/rokeller/photo-search-indexing)
 
-
 This repository holds everything needed to run a browser GUI offering semantic
 search for your own photos.
 
@@ -22,7 +21,7 @@ search for your own photos.
 
 Photo Search comes with a few separate components.
 
-* An _indexing tool_ ([`indexing/src`](indexing/src)) that calculates vector
+* An _indexing tool_ ([`src/indexing`](src/indexing)) that calculates vector
   embeddings for photos and sends these embeddings to the _indexing server_,
   which is part of the _web server_ below. This tool is designed to be run on
   a schedule (e.g. a cron job in Kubernetes), such that new photos are indexed
@@ -32,7 +31,7 @@ Photo Search comes with a few separate components.
   required around 10 GiB or more in dependencies (yuk!), the indexing tool
   (without the model, which both the script and the tool need) is around 10 MiB -
   a reduction of 99.9% or so.
-* A minimal _embedding server_ ([`srv/embeddings/`](srv/embeddings/)) that
+* A minimal _embedding server_ ([`src/embeddings`](src/embeddings)) that
   calculates vector embeddings for multi-lingual natural language queries, such
   that these queries can be matched/compared with embeddings calculated for
   photos. This server is designed to be run inside a Kubernetes cluster right
@@ -40,11 +39,11 @@ Photo Search comes with a few separate components.
   Python-based embedding server to reduce the memory footprint. Initial tests
   show a memory footprint of about 40% of that of the Python-based embedding
   server.
-* An executable _web server_ ([`srv/web/`](srv/web/)) that offers
+* An executable _web server_ ([`cmd/web`](cmd/web)) that offers
   HTTP endpoints for the above mentioned _indexing server_ as well as endpoints
   to search and retrieve photos from the browser GUI. This is designed to be
   run inside a Kubernetes cluster with access to the embedding server.
-* A modern _browser GUI_ ([`client/`](client/)) written largely in TypeScript
+* A modern _browser GUI_ ([`client`](client)) written largely in TypeScript
   and using react, that uses the above web server to search and retrieve the
   photos. The static assets produced for the client are designed to be served
   by the above _web server_.

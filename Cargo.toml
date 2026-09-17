@@ -1,27 +1,32 @@
-[workspace]
-resolver = "2"
+[package]
+name = "photos"
+version = "0.1.0"
+edition = "2024"
 
-members = [
-    "indexing",
-    "srv/embeddings",
-]
+[[bin]]
+name = "embeddings"
+path = "src/embeddings/bin/main.rs"
 
-[workspace.dependencies]
-anyhow = "1.0.104"
+[[bin]]
+name = "indexing"
+path = "src/indexing/bin/main.rs"
+
+[dependencies]
+anyhow = { version = "1.0.104", features = ["backtrace"] }
 bytes = "1.12.1"
 candle-core = "=0.11.0"
 candle-nn = "=0.11.0"
 candle-transformers = "=0.11.0"
 chrono = "0.4.45"
-clap = "4.6.6"
-image = { version = "0.25.10", default-features = false }
+clap = { version = "4.6.6", features = ["derive"] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg"], }
 json = "0.12.4"
 nom-exif = "2.8.1"
 regex = "1.13.1"
-reqwest = { version = "0.13.4", default-features = false, features = ["http2", "blocking", "json", "query"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["http2", "blocking", "json", "query"] }
 scan_dir = "0.3.3"
-serde = "1.0.229"
+serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
-tokenizers = { version = "0.23.2", default-features = false }
-tokio = "1.53.1"
-warp = "0.4.3"
+tokenizers = { version = "0.23.2", default-features = false, features = ["onig"] }
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
+warp = { version = "0.4.3", features = ["server"] }
