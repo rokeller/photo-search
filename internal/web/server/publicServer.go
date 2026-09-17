@@ -59,15 +59,15 @@ func (c publicServerContext) handleAuthConfig(w http.ResponseWriter, r *http.Req
 
 	w.WriteHeader(200)
 
-	w.Write([]byte("const ps=globalThis.photoSearch||{};"))
-	w.Write([]byte("ps.auth=ps.auth||{};"))
-	w.Write([]byte(fmt.Sprintf("ps.auth.clientId=%q;",
-		c.serverContext.oauthSettings.ClientId)))
-	w.Write([]byte(fmt.Sprintf("ps.auth.authority=%q;",
-		c.serverContext.oauthSettings.Authority)))
-	w.Write([]byte(fmt.Sprintf("ps.auth.scopes=%q;",
-		c.serverContext.oauthSettings.Scopes)))
-	w.Write([]byte("globalThis.photoSearch=ps;"))
+	fmt.Fprint(w, "const ps=globalThis.photoSearch||{};")
+	fmt.Fprint(w, "ps.auth=ps.auth||{};")
+	fmt.Fprintf(w, "ps.auth.clientId=%q;",
+		c.serverContext.oauthSettings.ClientId)
+	fmt.Fprintf(w, "ps.auth.authority=%q;",
+		c.serverContext.oauthSettings.Authority)
+	fmt.Fprintf(w, "ps.auth.scopes=%q;",
+		c.serverContext.oauthSettings.Scopes)
+	fmt.Fprint(w, "globalThis.photoSearch=ps;")
 }
 
 func (c publicServerContext) addV1API(mux *mux.Router) {

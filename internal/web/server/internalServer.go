@@ -21,7 +21,7 @@ func NewInternalServer(ctx *serverContext) *http.Server {
 		Handler: mux,
 	}
 
-	mux.HandleFunc("/_health/{type}", HealthHandler).Methods("GET")
+	mux.HandleFunc("/_health/{type}", HealthHandler).Methods(http.MethodGet)
 
 	internalCtx := internalServerContext{
 		serverContext: ctx,
@@ -33,14 +33,14 @@ func NewInternalServer(ctx *serverContext) *http.Server {
 
 func (c internalServerContext) addV1API(mux *mux.Router) {
 	mux.HandleFunc("/index", c.handleV1GetIndex).
-		Methods("GET")
+		Methods(http.MethodGet)
 
 	mux.HandleFunc("/index", c.handleV1PostToIndex).
-		Methods("POST").
+		Methods(http.MethodPost).
 		HeadersRegexp("Content-Type", "(text|application)/json")
 
-	mux.HandleFunc("/index", c.handleV1DeleteFromIndex).
-		Methods("DELETE").
+	mux.HandleFunc("/index/remove", c.handleV1DeleteFromIndex).
+		Methods(http.MethodPost).
 		HeadersRegexp("Content-Type", "(text|application)/json")
 }
 
@@ -106,12 +106,11 @@ func (c internalServerContext) handleV1DeleteFromIndex(w http.ResponseWriter, r 
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
 	if err := c.delete(req.Items); nil != err {
-		// TODO: put image path(s)
-		klog.Errorf("Failed to delete items: %v", err)
+		klog.ErrorS(err, "Failed to delete photos from index", "paths", req.Items)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
 	} else {
-		klog.V(1).Infof("Successfully deleted %d item(s) ...", len(req.Items))
+		klog.V(1).InfoS("Successfully deleted photos", "num", len(req.Items), "paths", req.Items)
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
