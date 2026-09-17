@@ -130,13 +130,6 @@ func (c publicServerContext) handleV1PhotosGetById(w http.ResponseWriter, r *htt
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// // TODO: Remove
-	// if rand.Intn(10) < 7 {
-	// 	w.Header().Add("x-cause", "random error")
-	// 	w.WriteHeader(500)
-	// 	return
-	// }
-
 	payload, err := c.getPayloadById(id)
 	if nil != err {
 		c.respondForError(err, w)
@@ -152,13 +145,6 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 	vars := mux.Vars(r)
 	id := vars["id"]
 	widthStr := vars["width"]
-
-	// // TODO: Remove
-	// if rand.Intn(10) < 3 {
-	// 	w.Header().Add("x-cause", "random error")
-	// 	w.WriteHeader(500)
-	// 	return
-	// }
 
 	width, err := strconv.Atoi(widthStr)
 	if nil != err {

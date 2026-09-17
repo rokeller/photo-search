@@ -87,12 +87,11 @@ func (c internalServerContext) handleV1PostToIndex(w http.ResponseWriter, r *htt
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 
 	if err := c.upsert(req.Items); nil != err {
-		// TODO: put image path(s)
-		klog.Errorf("Failed to insert items: %v", err)
+		klog.ErrorS(err, "Failed to upsert items", req.Items)
 		w.WriteHeader(500)
 		json.NewEncoder(w).Encode(err)
 	} else {
-		klog.V(1).Infof("Successfully upserted %d item(s) ...", len(req.Items))
+		klog.V(1).InfoS("Successfully upserted items", "num", len(req.Items), "items", req.Items)
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
