@@ -40,7 +40,7 @@ func main() {
 		*configPath,
 		*spaRootDir,
 	)
-	if nil != err {
+	if err != nil {
 		klog.Exitf("Failed to connect to qdrant collection: %v", err)
 	}
 	defer srv.Close()
@@ -65,7 +65,7 @@ func main() {
 }
 
 func serveHTTP(server *http.Server) {
-	if err := server.ListenAndServe(); nil != err {
+	if err := server.ListenAndServe(); err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			klog.InfoS("Server successfully shut down", "addrd", server.Addr)
 			return

@@ -44,14 +44,13 @@ func (m authenticationMiddleware) Middleware(next http.Handler) http.Handler {
 		defer cancelFunc()
 
 		token, err := m.tokenVerifier.Verify(ctx, tokenString)
-		if nil != err {
-			klog.Errorf("Failed to parse and verify token: %v", err)
+		if err != nil {
+			klog.ErrorS(err, "Failed to parse and verify token", "tokenString", tokenString)
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
 
-		klog.V(2).Infof("Authenticated subject: %s", token.Subject)
-
+		klog.V(2).InfoS("Authenticated", "subject", token.Subject)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -60,17 +59,17 @@ func (m authenticationMiddleware) initialize() authenticationMiddleware {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancelFunc()
 
-	klog.V(1).Infof("Creating provider for issuer '%s' ...", m.expectedIss)
+	klog.V(1).InfoS("Creating authentication provider", "issuer", m.expectedIss)
 	provider, err := oidc.NewProvider(ctx, m.expectedIss)
-	if nil != err {
+	if err != nil {
 		klog.Exitf("Failed to create new OIDC provider for '%s': %v", m.expectedIss, err)
 	}
 
-	klog.V(1).Infof("Creating verifier for issuer '%s' ...", m.expectedIss)
+	klog.V(1).InfoS("Creating authentication verifier", "issuer", m.expectedIss)
 	m.tokenVerifier = provider.Verifier(&oidc.Config{
 		SkipClientIDCheck: true,
 	})
-	klog.Infof("Creating authentication for issuer '%s' successfully initialized", m.expectedIss)
+	klog.InfoS("Authentication middleware initialized", "issuer", m.expectedIss)
 
 	return m
 }
