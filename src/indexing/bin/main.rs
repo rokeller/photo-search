@@ -3,7 +3,7 @@ use std::{collections::HashSet, iter::zip, path::Path, time::Instant};
 use anyhow::Result;
 use candle_core::Device;
 use clap::Parser;
-use json::{object, JsonValue};
+use json::{JsonValue, object};
 use metadata::{extract_exif, extract_timestamp_from_filename, get_path_metadata};
 use scan_dir::ScanDir;
 use serde::Deserialize;
@@ -42,6 +42,14 @@ struct Args {
         default_value = "20"
     )]
     batch_size: usize,
+
+    #[arg(
+        short,
+        long,
+        help = "List what changes would be applied without applying them",
+        default_value = "false"
+    )]
+    what_if: bool,
 }
 
 #[derive(Deserialize)]
@@ -58,6 +66,10 @@ fn main() -> Result<()> {
     let model = embedding::Model::new(device, args.model.as_str())?;
     println!("Model successfully loaded.");
 
+    if args.what_if {
+        println!("Running in what-if mode.")
+    }
+
     let photos_path = Path::new(&args.photos);
     let now = Instant::now();
 
@@ -73,6 +85,7 @@ fn main() -> Result<()> {
         &model,
         &indexing_server,
         args.batch_size,
+        args.what_if,
     )?;
     println!("Indexing photos took {:?}", now.elapsed());
 
@@ -85,6 +98,7 @@ fn index_photos(
     model: &embedding::Model,
     server_url: &String,
     batch_size: usize,
+    what_if: bool,
 ) -> Result<()> {
     let mut extensions = HashSet::new();
     for extension in file_extensions {
@@ -92,7 +106,7 @@ fn index_photos(
     }
     let extensions = extensions;
 
-    let cur_index = fetch_current_index(server_url)?;
+    let mut cur_index = fetch_current_index(server_url)?;
     println!("Found {} photos in current index.", cur_index.len());
 
     ScanDir::files()
@@ -105,13 +119,18 @@ fn index_photos(
             for (entry, _) in files {
                 let entry_path = entry.path();
                 let path_meta = get_path_metadata(&entry_path, &photos_path);
+                let rel_path = path_meta.rel_path.clone();
 
-                if path_meta.name.is_none()
-                    || path_meta.extension.is_none()
-                    || cur_index.contains(&path_meta.rel_path)
-                {
+                if path_meta.name.is_none() || path_meta.extension.is_none() {
                     // The file does not have a name or extension or it is
                     // already indexed, skip it.
+                    continue;
+                }
+
+                if cur_index.contains(&rel_path) {
+                    // Remove the file from cur_index so we can later identify files
+                    // that are in the index but no longer on the disk.
+                    cur_index.remove(&rel_path);
                     continue;
                 }
 
@@ -122,7 +141,7 @@ fn index_photos(
                 }
 
                 let mut meta = object! {
-                    path : path_meta.rel_path.clone(),
+                    path : rel_path.clone(),
                 };
                 let (exif, timestamp) = extract_exif(&path_meta.path);
                 if let Some(exif) = exif {
@@ -141,29 +160,33 @@ fn index_photos(
                     meta["timestamp"] = timestamp.and_utc().timestamp().into();
                 }
 
-                println!("Adding {} ...", path_meta.rel_path);
+                println!("Adding {} ...", rel_path);
                 num_files += 1;
-                batch_data.push((path_meta.path, meta));
+                if !what_if {
+                    batch_data.push((path_meta.path, meta));
 
-                if batch_data.len() >= batch_size {
-                    batch += 1;
-                    process_batch(batch, batch_data, model, server_url);
-                    batch_data = vec![];
+                    if batch_data.len() >= batch_size {
+                        batch += 1;
+                        process_add_photos_batch(batch, batch_data, model, server_url);
+                        batch_data = vec![];
+                    }
                 }
             }
 
             if batch_data.len() > 0 {
                 batch += 1;
-                process_batch(batch, batch_data, model, server_url);
+                process_add_photos_batch(batch, batch_data, model, server_url);
             }
 
             println!(
-                "Indexed {} files from {}.",
+                "Indexed {} new file(s) from {}.",
                 num_files,
                 photos_path.display()
             );
         })
         .unwrap();
+
+    process_removed_photos(server_url, batch_size, what_if, cur_index);
 
     Ok(())
 }
@@ -199,7 +222,7 @@ fn fetch_current_index(server_url: &String) -> Result<HashSet<String>> {
     Ok(paths)
 }
 
-fn process_batch(
+fn process_add_photos_batch(
     batch_no: i32,
     items: Vec<(String, JsonValue)>,
     model: &embedding::Model,
@@ -246,6 +269,69 @@ fn upload_embeddings(server_url: &String, items: Vec<JsonValue>) -> Result<()> {
         items: items,
     };
     println!("Uploading batch to internal server ...");
+    client
+        .post(&index_url)
+        .body(request.dump())
+        .header("content-type", "application/json")
+        .send()?
+        .error_for_status()?;
+
+    Ok(())
+}
+
+fn process_removed_photos(
+    server_url: &String,
+    batch_size: usize,
+    what_if: bool,
+    to_remove: HashSet<String>,
+) {
+    let mut num_deleted = 0;
+    let mut batch = 0;
+    let mut batch_data = vec![];
+
+    for path in to_remove {
+        println!("Removing {} ...", path);
+        num_deleted += 1;
+        if !what_if {
+            batch_data.push(path);
+
+            if batch_data.len() >= batch_size {
+                batch += 1;
+                process_remove_photos_batch(batch, batch_data, server_url);
+                batch_data = vec![];
+            }
+        }
+    }
+
+    if batch_data.len() > 0 {
+        batch += 1;
+        process_remove_photos_batch(batch, batch_data, server_url);
+    }
+
+    println!("Removed {} file(s) from index.", num_deleted,);
+}
+
+fn process_remove_photos_batch(batch_no: i32, paths: Vec<String>, server_url: &String) {
+    println!(
+        "Removing photos for batch {} ({} file(s)) from index...",
+        batch_no,
+        paths.len()
+    );
+
+    match delete_photos_from_index(server_url, paths) {
+        Err(e) => eprintln!("Error uploading batch: {}", e),
+        _ => {}
+    }
+}
+
+fn delete_photos_from_index(server_url: &String, paths: Vec<String>) -> Result<()> {
+    let index_url = format!("{}/v1/index/remove", server_url);
+    let client = reqwest::blocking::ClientBuilder::new().build()?;
+
+    let request = object! {
+        paths: paths,
+    };
+    println!("Deleting photos from index ...");
     client
         .post(&index_url)
         .body(request.dump())

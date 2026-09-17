@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: gomod
-    directory: /srv/web/
+    directory: /
     schedule:
       interval: daily
       time: "05:30"

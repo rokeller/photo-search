@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -11,9 +11,9 @@ import (
 	"strconv"
 
 	"github.com/disintegration/imaging"
-	"github.com/golang/glog"
 	"github.com/gorilla/mux"
-	"github.com/rokeller/photo-search/srv/web/models"
+	"github.com/rokeller/photo-search/internal/web/models"
+	"k8s.io/klog/v2"
 )
 
 type publicServerContext struct {
@@ -43,7 +43,7 @@ func NewPublicServer(ctx *serverContext) *http.Server {
 	apiRouter.Use(authMiddleware.Middleware)
 	publicCtx.addV1API(apiRouter)
 
-	spa := spaHandler{staticPath: "dist", indexPath: "index.html"}
+	spa := newSpaHandler(ctx.spaRootDir)
 	mux.PathPrefix("/").Handler(spa)
 
 	return srv
@@ -55,17 +55,19 @@ func (c publicServerContext) addAuthConfig(mux *mux.Router) {
 
 func (c publicServerContext) handleAuthConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("content-type", "application/javascript; charset=utf-8")
+	w.Header().Add("cache-control", "max-age=172800")
+
 	w.WriteHeader(200)
 
-	w.Write([]byte("const ps=globalThis.photoSearch||{};"))
-	w.Write([]byte("ps.auth=ps.auth||{};"))
-	w.Write([]byte(fmt.Sprintf("ps.auth.clientId=%q;",
-		c.serverContext.oauthSettings.ClientId)))
-	w.Write([]byte(fmt.Sprintf("ps.auth.authority=%q;",
-		c.serverContext.oauthSettings.Authority)))
-	w.Write([]byte(fmt.Sprintf("ps.auth.scopes=%q;",
-		c.serverContext.oauthSettings.Scopes)))
-	w.Write([]byte("globalThis.photoSearch=ps;"))
+	fmt.Fprint(w, "const ps=globalThis.photoSearch||{};")
+	fmt.Fprint(w, "ps.auth=ps.auth||{};")
+	fmt.Fprintf(w, "ps.auth.clientId=%q;",
+		c.serverContext.oauthSettings.ClientId)
+	fmt.Fprintf(w, "ps.auth.authority=%q;",
+		c.serverContext.oauthSettings.Authority)
+	fmt.Fprintf(w, "ps.auth.scopes=%q;",
+		c.serverContext.oauthSettings.Scopes)
+	fmt.Fprint(w, "globalThis.photoSearch=ps;")
 }
 
 func (c publicServerContext) addV1API(mux *mux.Router) {
@@ -169,7 +171,7 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 		// to put the photo into the right shape again.
 		image = realignImage(image, *orientation)
 	} else {
-		glog.V(1).Infof("Missing 'Orientation' tag in '%s'.", *relPath)
+		klog.V(1).Infof("Missing 'Orientation' tag in '%s'.", *relPath)
 	}
 
 	w.Header().Add("cache-control", "max-age=31556736, immutable")
@@ -198,7 +200,7 @@ func (c publicServerContext) respondForError(err error, w http.ResponseWriter) {
 func resizeImage(path string, newWidth int) (image.Image, error) {
 	image, err := imaging.Open(path)
 	if err != nil {
-		glog.Errorf("Failed to open photo file '%s': %v", path, err)
+		klog.Errorf("Failed to open photo file '%s': %v", path, err)
 		return nil, err
 	}
 

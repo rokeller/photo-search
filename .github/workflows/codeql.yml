@@ -62,10 +62,10 @@ jobs:
       if: ${{ matrix.language == 'go' }}
       uses: actions/setup-go@v7
       with:
-        go-version-file: 'srv/web/go.mod'
+        go-version-file: 'go.mod'
     - name: Build Go
       if: ${{ matrix.language == 'go' }}
-      run: go build -C srv/web
+      run: go build github.com/rokeller/photo-search/cmd/...
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
 
