@@ -38,17 +38,23 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	cleanURLPath := path.Clean("/" + r.URL.Path)
 	localPath := filepath.Join(basePath, filepath.FromSlash(cleanURLPath))
-	relPath, err := filepath.Rel(basePath, localPath)
-	if err != nil || relPath == ".." || strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) {
+	resolvedLocalPath, err := filepath.Abs(localPath)
+	if err != nil {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+	if resolvedLocalPath != basePath &&
+		!strings.HasPrefix(resolvedLocalPath, basePath+string(os.PathSeparator)) {
 		http.Error(w, "invalid path", http.StatusBadRequest)
 		return
 	}
 
 	klog.V(2).InfoS("Serving static file",
-		"localPath", localPath,
+		"localPath", resolvedLocalPath,
 		"urlPath", r.URL.Path)
-	fi, err := os.Stat(localPath)
+	fi, err := os.Stat(resolvedLocalPath)
 	if os.IsNotExist(err) || fi.IsDir() {
+		klog.V(3).InfoS("Fall back to root index.html", "urlPath", r.URL.Path)
 		// No dice, serve index.html instead, with 1d caching.
 		w.Header().Add("cache-control", "max-age=86400")
 		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
