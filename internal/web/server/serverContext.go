@@ -439,7 +439,44 @@ func (c *serverContext) getPayloadById(id string) (map[string]*pb.Value, error) 
 		}
 	}
 
-	return r.Result[0].Payload, nil
+	if len(r.Result) == 1 {
+		return r.Result[0].Payload, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (c *serverContext) deleteFromIndexById(id string) error {
+	client := pb.NewPointsClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	klog.InfoS("Deleting photo from index", "id", id)
+	_, err := client.Delete(ctx, &pb.DeletePoints{
+		CollectionName: c.coll,
+		Points: &pb.PointsSelector{
+			PointsSelectorOneOf: &pb.PointsSelector_Points{
+				Points: &pb.PointsIdsList{
+					Ids: []*pb.PointId{
+						{PointIdOptions: &pb.PointId_Uuid{Uuid: id}},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		code := status.Code(err)
+		klog.ErrorS(err, "Failed to delete point from index", "id", id, "code", code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return VectorDatabaseUnavailable
+
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *serverContext) getEmbedding(query string) ([]float32, error) {

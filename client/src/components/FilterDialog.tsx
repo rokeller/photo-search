@@ -14,7 +14,7 @@ import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
-import React, { SetStateAction, useEffect } from 'react';
+import React, { SetStateAction } from 'react';
 import { PhotoService } from '../services/PhotoService';
 
 interface FilterSettingsProps {
@@ -96,11 +96,6 @@ function TimestampSelector(props: React.PropsWithChildren<TimestampSelectorProps
         }
     }
 
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setEnabled(timestamp !== undefined);
-    }, [timestamp,])
-
     const checkbox = <Checkbox checked={enabled} onChange={onToggleFilter} />;
 
     return (
@@ -138,11 +133,6 @@ function DateSelector(props: React.PropsWithChildren<DateSelectorProps>) {
             setter(undefined);
         }
     }
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setEnabled(date !== undefined);
-    }, [date,])
 
     const checkbox = <Checkbox checked={enabled} onChange={onToggleFilter} />;
 

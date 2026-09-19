@@ -50,7 +50,7 @@ func (m authenticationMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		klog.V(2).InfoS("Authenticated", "subject", token.Subject)
+		klog.V(10).InfoS("Authenticated", "subject", token.Subject)
 		next.ServeHTTP(w, r)
 	})
 }

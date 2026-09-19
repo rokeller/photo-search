@@ -81,6 +81,8 @@ func (c publicServerContext) addV1API(mux *mux.Router) {
 
 	mux.HandleFunc("/photos/{id}", c.handleV1PhotosGetById).
 		Methods(http.MethodGet)
+	mux.HandleFunc("/photos/{id}/index", c.handleV1PhotosDeleteFromIndexById).
+		Methods(http.MethodDelete)
 
 	mux.HandleFunc("/photos/{id}/{width}", c.handleV1PhotosWithWidthGetById).
 		Methods(http.MethodGet)
@@ -133,11 +135,24 @@ func (c publicServerContext) handleV1PhotosGetById(w http.ResponseWriter, r *htt
 	payload, err := c.getPayloadById(id)
 	if err != nil {
 		c.respondForError(err, w)
+	} else if payload == nil {
+		w.WriteHeader(http.StatusNotFound)
 	} else {
 		relPath := getPathFromPayload(payload)
 		absPath := path.Join(c.photosRootDir, *relPath)
 		w.Header().Add("cache-control", "max-age=31556736, immutable")
 		http.ServeFile(w, r, absPath)
+	}
+}
+
+func (c publicServerContext) handleV1PhotosDeleteFromIndexById(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if err := c.deleteFromIndexById(id); err != nil {
+		c.respondForError(err, w)
+	} else {
+		w.WriteHeader(http.StatusAccepted)
 	}
 }
 
@@ -154,6 +169,9 @@ func (c publicServerContext) handleV1PhotosWithWidthGetById(w http.ResponseWrite
 	payload, err := c.getPayloadById(id)
 	if err != nil {
 		c.respondForError(err, w)
+		return
+	} else if payload == nil {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -210,31 +228,32 @@ func resizeImage(path string, newWidth int) (image.Image, error) {
 }
 
 func realignImage(img image.Image, orientation int64) image.Image {
-	// See https://exiftool.org/TagNames/EXIF.html
+	// See https://exiftool.org/TagNames/EXIF.html or
+	// https://exifstrip.com/guides/orientation-tag-explained
 	switch orientation {
 	case 1: // Normal, do nothing
 		return img
 
-	case 2: // Mirror horizontal
+	case 2: // Image was mirrored horizontally
 		return imaging.FlipH(img)
 
-	case 3: // Rotate 180
+	case 3: // Image was rotated 180 degrees
 		return imaging.Rotate180(img)
 
-	case 4: // Mirror vertical
+	case 4: // Image was mirrored vertically
 		return imaging.FlipV(img)
 
-	case 5: // Mirror horizontal and rotate 270 degrees clockwise
+	case 5: // Image was mirrored horizontally and rotated 270 degrees clockwise
 		return imaging.FlipH(imaging.Rotate90(img))
 
-	case 6: // Rotate 90 degrees clockwise
-		return imaging.Rotate270(img) // _counter_-clockwise
+	case 6: // Image was rotated 90 degrees clockwise
+		return imaging.Rotate270(img) // Now rotate _counter_-clockwise
 
-	case 7: // Mirror horizontal and rotate 90 degrees clockwise
+	case 7: // Image was mirrored horizontally and rotated 90 degrees clockwise
 		return imaging.FlipH(imaging.Rotate270(img))
 
-	case 8: // Rotate 270 degrees clockwise
-		return imaging.Rotate90(img) // _counter_-clockwise
+	case 8: // Image was rotated 270 degrees clockwise
+		return imaging.Rotate90(img) // Now rotate _counter_-clockwise
 
 	default:
 		return img

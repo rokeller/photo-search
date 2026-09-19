@@ -68,7 +68,7 @@ export default function PhotoContainer({ photos, onLoadMore }: PhotoContainerPro
     const viewPhoto = photoId !== undefined ?
         (
             <Dialog open onClose={hidePhoto} fullScreen hideBackdrop>
-                <ViewPhoto photoId={photoId} hide={hidePhoto} />
+                <ViewPhoto key={photoId} photoId={photoId} hide={hidePhoto} />
             </Dialog>
         )
         : null;

@@ -26,11 +26,7 @@ export default function ViewPhoto({ photoId, hide }: ViewPhotoProps) {
         }
     };
 
-    React.useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadPhoto();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [photoId]);
+    loadPhoto();
 
     return (
         <Paper sx={{ p: 1, width: '100vw', height: '100vh', }}>

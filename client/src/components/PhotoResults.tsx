@@ -13,8 +13,9 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
         const httpPromise = useHttpService();
         const isUpdating = React.useRef(false);
         const [photos, setPhotos] = React.useState<Array<PhotoResultItem>>();
+        const [offset, setOffset] = React.useState(0);
 
-        const updatePhotos = async (offset?: number) => {
+        const updatePhotos = React.useCallback(async () => {
             if (isUpdating.current) {
                 return;
             }
@@ -24,26 +25,27 @@ function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
                 const http = await httpPromise;
                 const response = await retrieveFn(http, props, offset);
                 if (response) {
-                    if (offset === undefined || offset <= 0) {
+                    if (offset <= 0) {
                         // Overwrite the previous set of photos.
                         setPhotos(response.items);
                     } else {
                         // Append to the previous set of photos.
-                        setPhotos([...(photos || []), ...response.items]);
+                        setPhotos((p) => [...(p || []), ...response.items]);
                     }
+                    setOffset((prev) => prev + response.items.length);
                 }
             } finally {
                 isUpdating.current = false;
             }
-        };
+        }, [httpPromise, props, offset]);
 
-        const doLoadMore = () => {
+        const doLoadMore = React.useCallback(async () => {
             // It's really pointless to load more photos unless we already have
             // some photos.
             if (photos) {
-                updatePhotos(photos?.length);
+                await updatePhotos(/*photos?.length*/);
             }
-        };
+        }, [photos, updatePhotos]);
 
         React.useEffect(() => {
             // The props have changed, which means the driving factor for the

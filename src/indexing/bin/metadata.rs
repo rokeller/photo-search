@@ -4,7 +4,7 @@ use std::{
 };
 
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use json::{array, object, JsonValue};
+use json::{JsonValue, array, object};
 use nom_exif::{EntryValue, ExifIter, ExifTag, MediaParser, MediaSource};
 use regex::Regex;
 
@@ -90,6 +90,12 @@ pub fn extract_exif(path: &String) -> (Option<JsonValue>, Option<NaiveDateTime>)
         for entity in iter {
             if let (Some(tag), Ok(val)) = (entity.tag(), entity.get_result()) {
                 let name = tag.to_string();
+                if exif_json.has_key(&name) {
+                    // We already have a value for this metadata, so let's skip
+                    // the new value.
+                    continue;
+                }
+
                 match val {
                     EntryValue::Undefined(_) => {}
                     EntryValue::Text(text) => {
