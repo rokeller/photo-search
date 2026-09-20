@@ -1,3 +1,5 @@
+const StorageKeyFilter = 'photos.filter';
+
 enum PhotoEventNames {
     PhotoFilterChanged = 'photoFilterChanged',
 }
@@ -56,6 +58,10 @@ class PhotoServiceImpl {
     private filterSearch?: ApiFilter = {};
     private filterRecommend?: ApiFilter = {};
 
+    constructor() {
+        this.loadFilter();
+    }
+
     public subscribe(
         eventName: PhotoEvents,
         listener: EventListenerOrEventListenerObject
@@ -74,22 +80,8 @@ class PhotoServiceImpl {
         const oldFilter = this.uiFilter;
 
         this.uiFilter = filter;
-        if (filter !== undefined) {
-            this.filterSearch = {
-                notBefore: extractTimestampValue(filter?.notBefore),
-                notAfter: extractTimestampValue(filter?.notAfter),
-                onThisDay: extractTimestampValue(makeThisYear(filter.onThisDay)),
-                minScore: filter.minScoreSearch,
-            };
-            this.filterRecommend = {
-                notBefore: extractTimestampValue(filter?.notBefore),
-                notAfter: extractTimestampValue(filter?.notAfter),
-                onThisDay: extractTimestampValue(makeThisYear(filter.onThisDay)),
-                minScore: filter.minScoreSimilar,
-            };
-        } else {
-            this.filterSearch = this.filterRecommend = undefined;
-        }
+        this.peristFilter();
+        this.propagateFilter();
 
         if (!Object.is(oldFilter, filter)) {
             const ev: CustomEvent<FilterChangedEvent> = new CustomEvent(
@@ -127,6 +119,43 @@ class PhotoServiceImpl {
             ].filter((isSet) => isSet).length;
         }
         return 0;
+    }
+
+    private peristFilter() {
+        if (this.uiFilter) {
+            localStorage.setItem(StorageKeyFilter, JSON.stringify(this.uiFilter))
+        } else {
+            localStorage.removeItem(StorageKeyFilter)
+        }
+    }
+
+    private propagateFilter() {
+        if (this.uiFilter) {
+            this.filterSearch = {
+                notBefore: extractTimestampValue(this.uiFilter.notBefore),
+                notAfter: extractTimestampValue(this.uiFilter.notAfter),
+                onThisDay: extractTimestampValue(makeThisYear(this.uiFilter.onThisDay)),
+                minScore: this.uiFilter.minScoreSearch,
+            };
+            this.filterRecommend = {
+                notBefore: extractTimestampValue(this.uiFilter.notBefore),
+                notAfter: extractTimestampValue(this.uiFilter.notAfter),
+                onThisDay: extractTimestampValue(makeThisYear(this.uiFilter.onThisDay)),
+                minScore: this.uiFilter.minScoreSimilar,
+            };
+        } else {
+            this.filterSearch = this.filterRecommend = undefined;
+        }
+    }
+
+    private loadFilter() {
+        const val = localStorage.getItem(StorageKeyFilter)
+        if (val !== null) {
+            this.uiFilter = JSON.parse(val);
+        } else {
+            this.uiFilter = undefined;
+        }
+        this.propagateFilter();
     }
 }
 
