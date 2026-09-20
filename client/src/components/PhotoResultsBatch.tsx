@@ -8,7 +8,7 @@ import { Http, PhotoResultItem, PhotoResultsResponse, useHttpService } from '../
 import { NoPhotosFound } from './NoPhotosFound';
 import { LIMIT, RetrieveFn } from './PhotoCommon';
 import PhotoTile from './PhotoTile';
-import { RecommendError } from './RecommentError';
+import { RecommendError } from './RecommendError';
 import { SearchError } from './SearchError';
 
 export interface SearchProps {
