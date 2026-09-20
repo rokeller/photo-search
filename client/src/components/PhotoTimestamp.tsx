@@ -1,7 +1,7 @@
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import Typography from '@mui/material/Typography';
 import { dateOnlyFormat, dateTimeFormat } from '../services/DateUtils';
-import { IconStyleProps } from './PhotoConsts';
+import { IconStyleProps } from './PhotoCommon';
 
 interface PhotoTimestampProps {
     timestamp: Date;

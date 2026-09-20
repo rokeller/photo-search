@@ -27,6 +27,11 @@ interface ApiFilter {
     minScore?: number;
 }
 
+export interface FilterChangedEvent {
+    old?: PhotoFilter;
+    new?: PhotoFilter;
+}
+
 function extractTimestampValue(dt: Date | undefined): number | undefined {
     if (dt === undefined) {
         return undefined;
@@ -87,12 +92,14 @@ class PhotoServiceImpl {
         }
 
         if (!Object.is(oldFilter, filter)) {
-            const ev = new CustomEvent(PhotoEventNames.PhotoFilterChanged, {
-                detail: {
-                    old: oldFilter,
-                    new: filter,
-                },
-            });
+            const ev: CustomEvent<FilterChangedEvent> = new CustomEvent(
+                PhotoEventNames.PhotoFilterChanged,
+                {
+                    detail: {
+                        old: oldFilter,
+                        new: filter,
+                    },
+                });
             document.dispatchEvent(ev);
         }
     }
@@ -105,7 +112,7 @@ class PhotoServiceImpl {
         return this.filterSearch;
     }
 
-    public getRecommentFilter() {
+    public getRecommendFilter() {
         return this.filterRecommend;
     }
 

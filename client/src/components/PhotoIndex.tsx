@@ -1,5 +1,5 @@
 import Typography from '@mui/material/Typography';
-import { PhotoOverlayOffsetSpace } from './PhotoConsts';
+import { PhotoOverlayOffsetSpace } from './PhotoCommon';
 
 interface PhotoIndexProps {
     index: number;

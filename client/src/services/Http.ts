@@ -72,7 +72,7 @@ class HttpImpl implements Http {
                 id: photoId,
                 limit,
                 offset,
-                filter: this.photoService.getRecommentFilter(),
+                filter: this.photoService.getRecommendFilter(),
             })
         });
 

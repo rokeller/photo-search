@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router';
 import { useConfirmAction } from '../services/ConfirmAction';
 import { useHttpService } from '../services/Http';
 import { PhotoFilter, PhotoService } from '../services/PhotoService';
-import { PhotoOverlayOffsetSpace } from './PhotoConsts';
+import { PhotoOverlayOffsetSpace } from './PhotoCommon';
 
 interface PhotoActionsProps {
     photoId: string;

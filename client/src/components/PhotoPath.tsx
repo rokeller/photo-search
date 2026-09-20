@@ -1,7 +1,7 @@
 import InsertPhotoOutlinedIcon from '@mui/icons-material/InsertPhotoOutlined';
 import Typography from '@mui/material/Typography';
 import { Copyable } from './Copyable';
-import { IconStyleProps } from './PhotoConsts';
+import { IconStyleProps } from './PhotoCommon';
 
 interface PhotoPathProps {
     path: string;
