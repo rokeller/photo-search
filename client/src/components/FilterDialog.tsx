@@ -23,12 +23,11 @@ interface FilterSettingsProps {
 }
 
 interface TabPanelProps {
-    children?: React.ReactNode;
     index: number;
     value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
+function TabPanel(props: React.PropsWithChildren<TabPanelProps>) {
     const { children, value, index, ...other } = props;
 
     return (
@@ -74,25 +73,25 @@ function makeInputControlDate(dt: Date | undefined) {
 interface TimestampSelectorProps {
     label: string;
     timestamp?: Date;
-    setter: React.Dispatch<React.SetStateAction<Date | undefined>>
+    onChange: React.Dispatch<React.SetStateAction<Date | undefined>>
 }
 
 function TimestampSelector(props: React.PropsWithChildren<TimestampSelectorProps>) {
-    const { label, children, timestamp, setter, } = props;
+    const { label, children, timestamp, onChange, } = props;
     const [enabled, setEnabled] = React.useState(timestamp !== undefined);
     const [lastVal, setLastVal] = React.useState(timestamp);
 
     function onChangeTimestamp(ev: React.ChangeEvent<HTMLInputElement>) {
         const local = ev.target.value;
         const val = new Date(local + 'Z');
-        setter(val);
+        onChange(val);
         setLastVal(val);
     }
 
     function onToggleFilter(ev: React.ChangeEvent<HTMLInputElement>) {
         setEnabled(ev.target.checked);
         if (!ev.target.checked) {
-            setter(undefined);
+            onChange(undefined);
         }
     }
 
@@ -166,25 +165,25 @@ function normalizeScore(score: number | undefined) {
     }
 }
 
+function makeSelectorKey<T>(prefix: string, val: T | undefined): string {
+    if (val === undefined) {
+        return prefix + 'undefined';
+    } else {
+        return prefix + 'defiend';
+    }
+}
+
 export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
+    const filter = PhotoService.getFilter();
     const [tab, setTab] = React.useState(0);
-    const [minScoreSearch, setMinScoreSearch] = React.useState<number>();
-    const [minScoreSimilar, setMinScoreSimilar] = React.useState<number>();
-    const [notBefore, setNotBefore] = React.useState<Date>();
-    const [notAfter, setNotAfter] = React.useState<Date>();
-    const [onThisDay, setOnThisDay] = React.useState<Date>();
+    const [minScoreSearch, setMinScoreSearch] = React.useState<undefined | number>(filter?.minScoreSearch);
+    const [minScoreSimilar, setMinScoreSimilar] = React.useState<undefined | number>(filter?.minScoreSimilar);
+    const [notBefore, setNotBefore] = React.useState<undefined | Date>(filter?.notBefore);
+    const [notAfter, setNotAfter] = React.useState<undefined | Date>(filter?.notAfter);
+    const [onThisDay, setOnThisDay] = React.useState<undefined | Date>(filter?.onThisDay);
 
     function onChangeTab(_: React.SyntheticEvent, newTab: number) {
         setTab(newTab);
-    }
-
-    function onFiltersChanged() {
-        const filter = PhotoService.getFilter();
-        setMinScoreSearch(filter?.minScoreSearch);
-        setMinScoreSimilar(filter?.minScoreSimilar);
-        setNotBefore(filter?.notBefore);
-        setNotAfter(filter?.notAfter);
-        setOnThisDay(filter?.onThisDay);
     }
 
     function apply() {
@@ -200,15 +199,14 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
     }
 
     function reset() {
-        setMinScoreSearch(undefined);
-        setMinScoreSimilar(undefined);
-        setNotBefore(undefined);
-        setNotAfter(undefined);
-        setOnThisDay(undefined);
+        setMinScoreSearch(filter?.minScoreSearch);
+        setMinScoreSimilar(filter?.minScoreSimilar);
+        setNotBefore(filter?.notBefore);
+        setNotAfter(filter?.notAfter);
+        setOnThisDay(filter?.onThisDay);
     }
 
     function close() {
-        onFiltersChanged();
         if (onClose) {
             onClose();
         }
@@ -227,11 +225,6 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
         }
     }
 
-    React.useEffect(() => {
-        PhotoService.subscribe('photoFilterChanged', onFiltersChanged);
-        return () => PhotoService.unsubscribe('photoFilterChanged', onFiltersChanged);
-    });
-
     const minSearchScoreVal = minScoreSearch !== undefined ? Math.round(minScoreSearch * 100) : 0;
     const minSimilarScoreVal = minScoreSimilar !== undefined ? Math.round(minScoreSimilar * 100) : 0;
 
@@ -246,11 +239,64 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                 </DialogContentText>
 
                 <Tabs value={tab} onChange={onChangeTab}>
-                    <Tab label='Similarity' {...allyProps(0)} />
-                    <Tab label='Dates/times' {...allyProps(1)} />
+                    <Tab label='Dates/times' {...allyProps(0)} />
+                    <Tab label='Similarity' {...allyProps(1)} />
                 </Tabs>
 
                 <TabPanel value={tab} index={0}>
+                    <Box>
+                        <TimestampSelector key={makeSelectorKey('notBefore-', notBefore)}
+                            label='Not before' onChange={setNotBefore}
+                            timestamp={notBefore}>
+                            <Typography variant='body2'>
+                                Show only photos with a timestamp (local time of where
+                                the photo was taken) that is not before this date/time.
+                            </Typography>
+                        </TimestampSelector>
+                    </Box>
+
+                    <Box sx={{ mt: 2, }}>
+                        <TimestampSelector key={makeSelectorKey('notAfter-', notAfter)}
+                            label='Not after' onChange={setNotAfter}
+                            timestamp={notAfter}>
+                            <Typography variant='body2'>
+                                Show only photos with a timestamp (local time of where
+                                the photo was taken) that is not after this date/time.
+                            </Typography>
+                        </TimestampSelector>
+                    </Box>
+
+                    <Box sx={{ mt: 2, }}>
+                        {
+                            notBefore !== undefined && notAfter !== undefined &&
+                                notBefore > notAfter ?
+                                <Alert severity='error'>
+                                    "Not before" refers to a date/time that is
+                                    later than "Not after". If you keep/apply
+                                    these filters, no photos will be shown.
+                                </Alert>
+                                :
+                                null
+                        }
+                        <Button disabled={notBefore === undefined && notAfter === undefined}
+                            color='secondary' onClick={swapNotBeforeNotAfter}>
+                            Swap "Not before" and "Not after"
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ mt: 2, }}>
+                        <DateSelector key={makeSelectorKey('onThisDay-', onThisDay)}
+                            label='On this day' setter={setOnThisDay}
+                            date={onThisDay}>
+                            <Typography variant='body2'>
+                                Show only photos with a timestamp (local time of where
+                                the photo was taken) that is the day (of any year).
+                            </Typography>
+                        </DateSelector>
+                    </Box>
+                </TabPanel>
+
+                <TabPanel value={tab} index={1}>
                     <Box>
                         <Typography variant='body1'>
                             Minimum search score
@@ -286,53 +332,6 @@ export default function FilterDialog({ open, onClose }: FilterSettingsProps) {
                             to duplicate photos and/or photos that were taken at
                             the same place and/or time.
                         </Typography>
-                    </Box>
-                </TabPanel>
-
-                <TabPanel value={tab} index={1}>
-                    <Box>
-                        <TimestampSelector label='Not before' setter={setNotBefore} timestamp={notBefore}>
-                            <Typography variant='body2'>
-                                Show only photos with a timestamp (local time of where
-                                the photo was taken) that is not before this date/time.
-                            </Typography>
-                        </TimestampSelector>
-                    </Box>
-
-                    <Box sx={{ mt: 2, }}>
-                        <TimestampSelector label='Not after' setter={setNotAfter} timestamp={notAfter}>
-                            <Typography variant='body2'>
-                                Show only photos with a timestamp (local time of where
-                                the photo was taken) that is not after this date/time.
-                            </Typography>
-                        </TimestampSelector>
-                    </Box>
-
-                    <Box sx={{ mt: 2, }}>
-                        {
-                            notBefore !== undefined && notAfter !== undefined &&
-                                notBefore > notAfter ?
-                                <Alert severity='error'>
-                                    "Not before" refers to a date/time that is
-                                    later than "Not after". If you keep/apply
-                                    these filters, no photos will be shown.
-                                </Alert>
-                                :
-                                null
-                        }
-                        <Button disabled={notBefore === undefined && notAfter === undefined}
-                            color='secondary' onClick={swapNotBeforeNotAfter}>
-                            Swap "Not before" and "Not after"
-                        </Button>
-                    </Box>
-
-                    <Box sx={{ mt: 2, }}>
-                        <DateSelector label='On this day' setter={setOnThisDay} date={onThisDay}>
-                            <Typography variant='body2'>
-                                Show only photos with a timestamp (local time of where
-                                the photo was taken) that is the day (of any year).
-                            </Typography>
-                        </DateSelector>
                     </Box>
                 </TabPanel>
             </DialogContent>

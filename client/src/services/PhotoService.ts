@@ -53,6 +53,15 @@ function makeThisYear(dt: Date | undefined) {
     return new Date(year + monthAndDay + 'T00:00:00Z')
 }
 
+function ensureDate(dt: Date | string | undefined): Date | undefined {
+    if (dt) {
+        if (typeof dt === 'string') {
+            return new Date(dt);
+        }
+        return dt;
+    }
+}
+
 class PhotoServiceImpl {
     private uiFilter?: PhotoFilter = {};
     private filterSearch?: ApiFilter = {};
@@ -152,6 +161,11 @@ class PhotoServiceImpl {
         const val = localStorage.getItem(StorageKeyFilter)
         if (val !== null) {
             this.uiFilter = JSON.parse(val);
+            if (this.uiFilter) {
+                this.uiFilter.notAfter = ensureDate(this.uiFilter.notAfter);
+                this.uiFilter.notBefore = ensureDate(this.uiFilter.notBefore);
+                this.uiFilter.onThisDay = ensureDate(this.uiFilter.onThisDay);
+            }
         } else {
             this.uiFilter = undefined;
         }

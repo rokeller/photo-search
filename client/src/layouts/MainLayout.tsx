@@ -114,7 +114,9 @@ export default function MainLayout({ children }: React.PropsWithChildren) {
             </Toolbar>
         </AppBar>
         {mobileMenu}
-        <FilterDialog open={filtersShown} onClose={hideFilters} />
+        {filtersShown ?
+            <FilterDialog open={filtersShown} onClose={hideFilters} />
+            : null}
         {children ?? <Outlet />}
         <AppBar position='fixed' sx={{ top: 'auto', bottom: 0, }}>
             <Toolbar variant='dense'>
