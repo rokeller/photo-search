@@ -1,138 +1,68 @@
+import Dialog from '@mui/material/Dialog';
 import React from 'react';
-import { toast } from 'react-toastify';
-import { isErrorResponse } from '../services/Errors';
-import { Http, PhotoResultItem, PhotoResultsResponse, useHttpService } from '../services/Http';
-import { PhotoService } from '../services/PhotoService';
+import { LIMIT } from './PhotoCommon';
 import PhotoContainer from './PhotoContainer';
+import {
+    PhotoResultsBatchProps, RecommendProps, SearchPhotoResultsBatch,
+    SearchProps, SimilarPhotoResultsBatch,
+} from './PhotoResultsBatch';
+import ViewPhoto from './ViewPhoto';
 
-const LIMIT = 12;
-type RetrieveFn<T> = (http: Http, props: T, offset?: number) => Promise<PhotoResultsResponse>;
-
-function PhotoResultsFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
+function PhotoResultsFactory<TProps>(BatchComponent: React.FC<PhotoResultsBatchProps<TProps>>) {
     const Component = (props: TProps) => {
-        const httpPromise = useHttpService();
-        const isUpdating = React.useRef(false);
-        const [photos, setPhotos] = React.useState<Array<PhotoResultItem>>();
+        const [offset, setOffset] = React.useState(LIMIT);
+        const [noMore, setNoMore] = React.useState(false);
+        const [batches, setBatches] = React.useState<React.ReactNode[]>(
+            [<BatchComponent key={'offset-0'} offset={0}
+                onNoMore={() => setNoMore(true)}
+                showPhoto={showPhoto}
+                input={props} />]
+        );
+        const [photoId, setPhotoId] = React.useState<string>();
 
-        const updatePhotos = async (offset?: number) => {
-            if (isUpdating.current) {
-                return;
+        const doLoadMore = React.useCallback(async () => {
+            if (!noMore) {
+                setBatches((prev) => [
+                    ...prev,
+                    <BatchComponent key={'offset-' + offset} offset={offset}
+                        onNoMore={() => setNoMore(true)}
+                        showPhoto={showPhoto}
+                        input={props} />
+                ]);
+                setOffset((prev) => prev + LIMIT);
             }
-
-            isUpdating.current = true;
-            try {
-                const http = await httpPromise;
-                const response = await retrieveFn(http, props, offset);
-                if (response) {
-                    if (offset === undefined || offset <= 0) {
-                        // Overwrite the previous set of photos.
-                        setPhotos(response.items);
-                    } else {
-                        // Append to the previous set of photos.
-                        setPhotos([...(photos || []), ...response.items]);
-                    }
-                }
-            } finally {
-                isUpdating.current = false;
-            }
-        };
-
-        const doLoadMore = () => {
-            // It's really pointless to load more photos unless we already have
-            // some photos.
-            if (photos) {
-                updatePhotos(photos?.length);
-            }
-        };
+        }, [props, offset, noMore]);
 
         React.useEffect(() => {
-            // The props have changed, which means the driving factor for the
-            // retrieveFn has changed. That implies that we move to a new result
-            // set, which is why we should move to the beginning of the page
-            // again.
             window.scrollTo({ top: 0 });
-            updatePhotos();
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [props]);
 
-        React.useEffect(() => {
-            const onFilterChanged = () => {
-                // The filter has changed, so we need to start at the top again
-                // and fetch a new result set.
-                window.scrollTo({ top: 0 });
-                updatePhotos();
-            };
+        function showPhoto(photoId: string) {
+            setPhotoId(photoId);
+        }
 
-            PhotoService.subscribe('photoFilterChanged', onFilterChanged);
+        function hidePhoto() {
+            setPhotoId(undefined);
+        }
 
-            return () => {
-                PhotoService.unsubscribe('photoFilterChanged', onFilterChanged);
-            }
-        });
+        const viewPhoto = photoId !== undefined ?
+            (
+                <Dialog open onClose={hidePhoto} fullScreen hideBackdrop>
+                    <ViewPhoto key={photoId} photoId={photoId} hide={hidePhoto} />
+                </Dialog>
+            )
+            : null;
 
-        return <PhotoContainer photos={photos} onLoadMore={doLoadMore} />;
+        return (
+            <>
+                <PhotoContainer onLoadMore={doLoadMore}>{batches}</PhotoContainer>
+                {viewPhoto}
+            </>
+        );
     }
 
     return Component;
 }
 
-interface SearchProps {
-    query: string;
-}
-
-interface RecommendProps {
-    photoId: string;
-}
-
-interface ErrorProps {
-    error: unknown;
-}
-
-function SearchError({ error }: ErrorProps) {
-    const errorCode = isErrorResponse(error) ? error.code : undefined;
-    return (
-        <div>
-            <strong>Search is not available right now.</strong>
-            <div>
-                Please try again later, or report this issue to your
-                administrator.
-            </div>
-            <div>Error: <code>{errorCode}</code></div>
-        </div>
-    );
-}
-
-function RecommendError({ error }: ErrorProps) {
-    const errorCode = isErrorResponse(error) ? error.code : undefined;
-    return (
-        <div>
-            <strong>Recommendations are not available right now.</strong>
-            <div>
-                Please try again later, or report this issue to your
-                administrator.
-            </div>
-            <div>Error: <code>{errorCode}</code></div>
-        </div>
-    );
-}
-
-async function searchPhotos(http: Http, { query }: SearchProps, offset?: number): Promise<PhotoResultsResponse> {
-    try {
-        return await http.search({ query, offset, limit: LIMIT });
-    } catch (e) {
-        toast.error(<SearchError error={e} />);
-        return { items: [] };
-    }
-}
-
-async function recommendPhotos(http: Http, { photoId }: RecommendProps, offset?: number): Promise<PhotoResultsResponse> {
-    try {
-        return await http.recommend({ photoId, offset, limit: LIMIT });
-    } catch (e) {
-        toast.error(<RecommendError error={e} />);
-        return { items: [] };
-    }
-}
-
-export const SearchPhotoResults = PhotoResultsFactory<SearchProps>(searchPhotos);
-export const SimilarPhotoResults = PhotoResultsFactory<RecommendProps>(recommendPhotos);
+export const SearchPhotoResults = PhotoResultsFactory<SearchProps>(SearchPhotoResultsBatch);
+export const SimilarPhotoResults = PhotoResultsFactory<RecommendProps>(SimilarPhotoResultsBatch);

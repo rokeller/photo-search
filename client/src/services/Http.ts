@@ -1,3 +1,4 @@
+import React from 'react';
 import { useAccessToken } from './AuthConfig';
 import { isErrorResponse, PhotoSearchError } from './Errors';
 import { PhotoService } from './PhotoService';
@@ -29,6 +30,7 @@ export interface Http {
     recommend(r: RecommendSimilarPhotosRequest): Promise<PhotoResultsResponse>;
     getPhotoSrc(id: string, width?: number): string;
     getPhoto(id: string, width?: number): Promise<string>;
+    removeFromIndex(id: string): Promise<void>;
 }
 
 class HttpImpl implements Http {
@@ -70,7 +72,7 @@ class HttpImpl implements Http {
                 id: photoId,
                 limit,
                 offset,
-                filter: this.photoService.getRecommentFilter(),
+                filter: this.photoService.getRecommendFilter(),
             })
         });
 
@@ -102,6 +104,13 @@ class HttpImpl implements Http {
         return await this.handleResponseErrors(resp, extractContent);
     }
 
+    public async removeFromIndex(id: string) {
+        const resp = await this.fetch('/api/v1/photos/' + id + '/index', {
+            method: 'DELETE',
+        });
+        await this.handleResponseErrors(resp, Promise.resolve);
+    }
+
     private async fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         const finalInit: RequestInit = init || {};
         const authHeaders = await this.authenticateRequest();
@@ -130,6 +139,7 @@ class HttpImpl implements Http {
     ): Promise<TResponse> {
         switch (resp.status) {
             case 200:
+            case 202:
                 return extractContent(resp);
 
             case 500:
@@ -151,7 +161,6 @@ class HttpImpl implements Http {
             default:
                 throw new Error('unknown error: ' + resp.status);
         }
-
     }
 }
 
@@ -159,6 +168,40 @@ function factory(accessToken: string): Http {
     return new HttpImpl(accessToken);
 }
 
+type ResolveFn = (value: Http | PromiseLike<Http>) => void;
+type RejectFn = (reason?: unknown) => void;
+
 export function useHttpService(): Promise<Http> {
-    return useAccessToken().then(factory);
+    const accessTokenPromise = useAccessToken();
+    const promiseRef = React.useRef<null | Promise<Http>>(null);
+    const resolveRef = React.useRef<null | ResolveFn>(null);
+    const rejectRef = React.useRef<null | RejectFn>(null);
+
+    if (promiseRef.current === null) {
+        promiseRef.current = new Promise<Http>((resolve, reject) => {
+            if (resolveRef.current === null) {
+                resolveRef.current = resolve;
+            }
+            if (rejectRef.current === null) {
+                rejectRef.current = reject;
+            }
+        });
+    }
+
+    React.useEffect(() => {
+        if (resolveRef.current === null || rejectRef.current === null) {
+            console.warn('resolve and/or reject are not set yet', resolveRef.current, rejectRef.current);
+            return;
+        }
+
+        accessTokenPromise
+            .then((accessToken) => resolveRef.current!(factory(accessToken)))
+            .catch((error) => {
+                console.error('failed to get access token for HTTP service', error);
+                rejectRef.current!(new Error('failed to get access token for HTTP service'));
+            });
+    }, [accessTokenPromise]);
+
+    // eslint-disable-next-line react-hooks/refs
+    return promiseRef.current;
 }

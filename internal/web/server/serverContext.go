@@ -327,21 +327,21 @@ func (c *serverContext) search(
 	qdrantFilter := makeQdrantFilter(filter)
 	klog.V(1).InfoS("Search", "filter", qdrantFilter)
 
-	req := &pb.SearchPoints{
+	req := &pb.QueryPoints{
 		CollectionName: c.coll,
-		Vector:         v,
-		Limit:          uint64(limit),
+		Query:          pb.NewQuery(v...),
+		Limit:          new(uint64(limit)),
 		Offset:         &finalOffset,
 		Filter:         qdrantFilter,
 		WithPayload: &pb.WithPayloadSelector{
 			SelectorOptions: &pb.WithPayloadSelector_Enable{Enable: true},
 		},
 	}
-	if filter.MinScore != nil {
+	if filter != nil && filter.MinScore != nil {
 		req.ScoreThreshold = filter.MinScore
 	}
 
-	r, err := client.Search(ctx, req)
+	r, err := client.Query(ctx, req)
 	if err != nil {
 		code := status.Code(err)
 		klog.ErrorS(err, "Failed to search vectors", "code", code)
@@ -376,24 +376,28 @@ func (c *serverContext) recommend(
 	qdrantFilter := makeQdrantFilter(filter)
 	klog.V(1).InfoS("Recommend", "filter", qdrantFilter)
 
-	req := &pb.RecommendPoints{
+	req := &pb.QueryPoints{
 		CollectionName: c.coll,
-		Positive: []*pb.PointId{
-			{
-				PointIdOptions: &pb.PointId_Uuid{Uuid: id},
+		Query: pb.NewQueryRecommend(&pb.RecommendInput{
+			Positive: []*pb.VectorInput{
+				{
+					Variant: &pb.VectorInput_Id{
+						Id: pb.NewID(id),
+					},
+				},
 			},
-		},
-		Limit:  uint64(limit),
+		}),
+		Limit:  new(uint64(limit)),
 		Offset: &finalOffset,
 		Filter: qdrantFilter,
 		WithPayload: &pb.WithPayloadSelector{
 			SelectorOptions: &pb.WithPayloadSelector_Enable{Enable: true},
 		},
 	}
-	if filter.MinScore != nil {
+	if filter != nil && filter.MinScore != nil {
 		req.ScoreThreshold = filter.MinScore
 	}
-	r, err := client.Recommend(ctx, req)
+	r, err := client.Query(ctx, req)
 	if err != nil {
 		code := status.Code(err)
 		klog.ErrorS(err, "Failed to recommend similar", "id", id, "code", code)
@@ -439,7 +443,44 @@ func (c *serverContext) getPayloadById(id string) (map[string]*pb.Value, error) 
 		}
 	}
 
-	return r.Result[0].Payload, nil
+	if len(r.Result) == 1 {
+		return r.Result[0].Payload, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (c *serverContext) deleteFromIndexById(id string) error {
+	client := pb.NewPointsClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	klog.InfoS("Deleting photo from index", "id", id)
+	_, err := client.Delete(ctx, &pb.DeletePoints{
+		CollectionName: c.coll,
+		Points: &pb.PointsSelector{
+			PointsSelectorOneOf: &pb.PointsSelector_Points{
+				Points: &pb.PointsIdsList{
+					Ids: []*pb.PointId{
+						{PointIdOptions: &pb.PointId_Uuid{Uuid: id}},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		code := status.Code(err)
+		klog.ErrorS(err, "Failed to delete point from index", "id", id, "code", code)
+
+		switch code {
+		case codes.Unavailable, codes.DeadlineExceeded:
+			return VectorDatabaseUnavailable
+
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *serverContext) getEmbedding(query string) ([]float32, error) {
@@ -523,7 +564,7 @@ func exifTagValueToFieldValue(v any) (*pb.Value, error) {
 		return &pb.Value{Kind: &pb.Value_BoolValue{BoolValue: val}}, nil
 
 	case json.Number:
-		if strings.Index(string(val), ".") >= 0 {
+		if strings.Contains(string(val), ".") {
 			// float64
 			f, err := val.Float64()
 			if nil == err {

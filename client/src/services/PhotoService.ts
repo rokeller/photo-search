@@ -1,3 +1,5 @@
+const StorageKeyFilter = 'photos.filter';
+
 enum PhotoEventNames {
     PhotoFilterChanged = 'photoFilterChanged',
 }
@@ -27,6 +29,11 @@ interface ApiFilter {
     minScore?: number;
 }
 
+export interface FilterChangedEvent {
+    old?: PhotoFilter;
+    new?: PhotoFilter;
+}
+
 function extractTimestampValue(dt: Date | undefined): number | undefined {
     if (dt === undefined) {
         return undefined;
@@ -46,10 +53,23 @@ function makeThisYear(dt: Date | undefined) {
     return new Date(year + monthAndDay + 'T00:00:00Z')
 }
 
+function ensureDate(dt: Date | string | undefined): Date | undefined {
+    if (dt) {
+        if (typeof dt === 'string') {
+            return new Date(dt);
+        }
+        return dt;
+    }
+}
+
 class PhotoServiceImpl {
     private uiFilter?: PhotoFilter = {};
     private filterSearch?: ApiFilter = {};
     private filterRecommend?: ApiFilter = {};
+
+    constructor() {
+        this.loadFilter();
+    }
 
     public subscribe(
         eventName: PhotoEvents,
@@ -69,30 +89,18 @@ class PhotoServiceImpl {
         const oldFilter = this.uiFilter;
 
         this.uiFilter = filter;
-        if (filter !== undefined) {
-            this.filterSearch = {
-                notBefore: extractTimestampValue(filter?.notBefore),
-                notAfter: extractTimestampValue(filter?.notAfter),
-                onThisDay: extractTimestampValue(makeThisYear(filter.onThisDay)),
-                minScore: filter.minScoreSearch,
-            };
-            this.filterRecommend = {
-                notBefore: extractTimestampValue(filter?.notBefore),
-                notAfter: extractTimestampValue(filter?.notAfter),
-                onThisDay: extractTimestampValue(makeThisYear(filter.onThisDay)),
-                minScore: filter.minScoreSimilar,
-            };
-        } else {
-            this.filterSearch = this.filterRecommend = undefined;
-        }
+        this.peristFilter();
+        this.propagateFilter();
 
         if (!Object.is(oldFilter, filter)) {
-            const ev = new CustomEvent(PhotoEventNames.PhotoFilterChanged, {
-                detail: {
-                    old: oldFilter,
-                    new: filter,
-                },
-            });
+            const ev: CustomEvent<FilterChangedEvent> = new CustomEvent(
+                PhotoEventNames.PhotoFilterChanged,
+                {
+                    detail: {
+                        old: oldFilter,
+                        new: filter,
+                    },
+                });
             document.dispatchEvent(ev);
         }
     }
@@ -105,7 +113,7 @@ class PhotoServiceImpl {
         return this.filterSearch;
     }
 
-    public getRecommentFilter() {
+    public getRecommendFilter() {
         return this.filterRecommend;
     }
 
@@ -120,6 +128,48 @@ class PhotoServiceImpl {
             ].filter((isSet) => isSet).length;
         }
         return 0;
+    }
+
+    private peristFilter() {
+        if (this.uiFilter) {
+            localStorage.setItem(StorageKeyFilter, JSON.stringify(this.uiFilter))
+        } else {
+            localStorage.removeItem(StorageKeyFilter)
+        }
+    }
+
+    private propagateFilter() {
+        if (this.uiFilter) {
+            this.filterSearch = {
+                notBefore: extractTimestampValue(this.uiFilter.notBefore),
+                notAfter: extractTimestampValue(this.uiFilter.notAfter),
+                onThisDay: extractTimestampValue(makeThisYear(this.uiFilter.onThisDay)),
+                minScore: this.uiFilter.minScoreSearch,
+            };
+            this.filterRecommend = {
+                notBefore: extractTimestampValue(this.uiFilter.notBefore),
+                notAfter: extractTimestampValue(this.uiFilter.notAfter),
+                onThisDay: extractTimestampValue(makeThisYear(this.uiFilter.onThisDay)),
+                minScore: this.uiFilter.minScoreSimilar,
+            };
+        } else {
+            this.filterSearch = this.filterRecommend = undefined;
+        }
+    }
+
+    private loadFilter() {
+        const val = localStorage.getItem(StorageKeyFilter)
+        if (val !== null) {
+            this.uiFilter = JSON.parse(val);
+            if (this.uiFilter) {
+                this.uiFilter.notAfter = ensureDate(this.uiFilter.notAfter);
+                this.uiFilter.notBefore = ensureDate(this.uiFilter.notBefore);
+                this.uiFilter.onThisDay = ensureDate(this.uiFilter.onThisDay);
+            }
+        } else {
+            this.uiFilter = undefined;
+        }
+        this.propagateFilter();
     }
 }
 
