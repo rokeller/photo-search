@@ -30,3 +30,4 @@ serde_json = "1.0.154"
 tokenizers = { version = "0.23.2", default-features = false, features = ["onig"] }
 tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal"] }
 warp = { version = "0.4.3", features = ["server"] }
+zip = "9.1.3"
