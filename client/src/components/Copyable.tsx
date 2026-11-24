@@ -18,9 +18,8 @@ export function Copyable({ value, children }: React.PropsWithChildren<CopyablePr
 
     if (clipboardWritable) {
         return (
-            <Box onClick={copy}
+            <Box onClick={copy} component='span'
                 sx={{
-                    display: 'inline',
                     cursor: 'pointer',
                 }}
             >{children}</Box>

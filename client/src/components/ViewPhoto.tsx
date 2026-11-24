@@ -1,9 +1,10 @@
+import { useMsal } from '@azure/msal-react';
 import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import React from 'react';
-import { useHttpService } from '../services/Http';
+import { useHttp } from '../services/Http';
 import PhotoWithRetry from './PhotoWithRetry';
 
 interface ViewPhotoProps {
@@ -12,26 +13,38 @@ interface ViewPhotoProps {
 }
 
 export default function ViewPhoto({ photoId, hide }: ViewPhotoProps) {
-    const httpPromise = useHttpService();
+    const { instance } = useMsal();
+    const http = useHttp(instance);
     // A photoUrl of undefined means that we couldn't load the photo but we can try again.
     const [photoUrl, setPhotoUrl] = React.useState<string | undefined>('/please-wait.svg');
-    const loadPhoto = async () => {
-        const http = await httpPromise;
-        try {
-            const url = await http.getPhoto(photoId);
-            setPhotoUrl(url);
-        } catch (e) {
-            console.error('failed to load photo', e);
-            setPhotoUrl(undefined);
-        }
-    };
 
-    loadPhoto();
+    React.useEffect(() => {
+        let blobUrl: string | undefined;
+
+        async function loadPhoto() {
+            try {
+                const url = await http.current.getPhoto(photoId);
+                blobUrl = url;
+                setPhotoUrl(url);
+            } catch (e: unknown) {
+                console.error('failed to load photo', e);
+                blobUrl = undefined;
+                setPhotoUrl(undefined);
+            }
+        }
+        loadPhoto();
+
+        return () => {
+            if (blobUrl) {
+                URL.revokeObjectURL(blobUrl);
+            };
+        }
+    }, [http, photoId]);
 
     return (
         <Paper sx={{ p: 1, width: '100vw', height: '100vh', }}>
             <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', height: '100%', }}>
-                <PhotoWithRetry preview={false} photoUrl={photoUrl} onRetry={loadPhoto} />
+                <PhotoWithRetry preview={false} photoUrl={photoUrl} />
             </Box>
             <Button aria-label='close' onClick={hide} color='secondary'
                 variant='outlined' endIcon={<CloseIcon />} sx={{

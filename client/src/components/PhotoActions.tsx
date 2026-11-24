@@ -1,3 +1,4 @@
+import { useMsal } from '@azure/msal-react';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
@@ -11,7 +12,7 @@ import MenuItem from '@mui/material/MenuItem';
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { useConfirmAction } from '../services/ConfirmAction';
-import { useHttpService } from '../services/Http';
+import { useHttp } from '../services/Http';
 import { PhotoFilter, PhotoService } from '../services/PhotoService';
 import { PhotoOverlayOffsetSpace } from './PhotoCommon';
 
@@ -26,7 +27,9 @@ export function PhotoActions({ photoId, timestamp }: PhotoActionsProps) {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
     const navigate = useNavigate();
-    const httpPromise = useHttpService();
+    // const httpPromise = useHttpService();
+    const { instance } = useMsal();
+    const http = useHttp(instance);
     const {
         confirm: confirmRemoveFromIndex,
         Dialog: ConfirmRemoveFromIndexDialog,
@@ -52,8 +55,7 @@ export function PhotoActions({ photoId, timestamp }: PhotoActionsProps) {
     async function removeFromIndex() {
         onCloseMenu();
         if (await confirmRemoveFromIndex()) {
-            const http = await httpPromise;
-            await http.removeFromIndex(photoId);
+            await http.current.removeFromIndex(photoId);
         }
     }
 

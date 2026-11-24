@@ -65,7 +65,7 @@ interface SearchActionNavigate {
 type SearchAction = SearchActionSetQuery | SearchActionNavigate;
 
 export default function SearchBox() {
-    const searchId = React.useId();
+    const searchRef = React.useRef<HTMLInputElement>(null)
     const [searchState, dispatch] = React.useReducer(reducer, {});
     const { query } = useParams<keyof PhotosSearchParams>();
     const navigate = useNavigate();
@@ -84,10 +84,6 @@ export default function SearchBox() {
         }
     }
 
-    function getSearchInput() {
-        return document.getElementById(searchId) as HTMLInputElement | undefined;
-    }
-
     function navigateForQuery(query?: string) {
         if (query !== undefined && query !== '') {
             navigate('/photos/search/' + encodeURIComponent(query));
@@ -97,7 +93,7 @@ export default function SearchBox() {
     }
 
     function setQuery() {
-        const search = getSearchInput();
+        const search = searchRef.current;
         if (search) {
             const query = search.value;
             console.debug('setQuery', 'searchState=', searchState, 'newQuery=', query);
@@ -114,30 +110,18 @@ export default function SearchBox() {
     }
 
     React.useEffect(() => {
-        const search = getSearchInput();
+        const search = searchRef.current;
         if (search) {
             search.value = query ?? '';
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query,]);
-
-    React.useEffect(() => {
-        const search = getSearchInput();
-        if (search) {
-            search.addEventListener('search', setQuery);
-            return () => {
-                search.removeEventListener('search', setQuery);
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchId,]);
 
     return (
         <Container sx={{ flexGrow: 1, }}>
             <IconWrapper>
                 <SearchIcon />
             </IconWrapper>
-            <StyledInputBase id={searchId} placeholder='Search…' autoFocus
+            <StyledInputBase inputRef={searchRef} placeholder='Search…' autoFocus
                 type='search' onKeyDownCapture={onKeyDown}
                 inputProps={{ 'aria-label': 'search' }} />
         </Container>

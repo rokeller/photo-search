@@ -1,9 +1,10 @@
+import { useMsal } from '@azure/msal-react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 import { isMidnight } from '../services/DateUtils';
-import { PhotoResultItem, useHttpService } from '../services/Http';
+import { PhotoResultItem, useHttp } from '../services/Http';
 import { PhotoActions } from './PhotoActions';
 import { PhotoIndex } from './PhotoIndex';
 import { PhotoPath } from './PhotoPath';
@@ -17,40 +18,33 @@ interface PhotoTileProps {
 }
 
 export default function PhotoTile({ details, resultIndex, onView }: PhotoTileProps) {
-    const httpPromise = useHttpService();
+    const { instance } = useMsal();
+    const http = useHttp(instance);
     const timestamp = details.timestamp ? new Date(details.timestamp * 1000) : undefined;
     // A photoUrl of undefined means that we couldn't load the photo but we can try again.
     const [photoUrl, setPhotoUrl] = React.useState<string | undefined>('/please-wait.svg');
 
-    const loadPhoto = React.useCallback(async () => {
-        const http = await httpPromise;
-        try {
-            return await http.getPhoto(details.id, 480);
-        } catch (e) {
-            console.error('failed to load photo', e);
-            return undefined;
-        }
-    }, [details.id, httpPromise]);
-
     React.useEffect(() => {
-        let ignore = false;
-        loadPhoto()
-            .then((url) => {
-                if (!ignore) {
-                    setPhotoUrl(url);
-                }
-            })
-            .catch((e) => {
-                console.error('failed to get photo URL', e);
-                if (!ignore) {
-                    setPhotoUrl(undefined);
-                }
-            })
-            ;
+        let blobUrl: string | undefined;
+
+        async function loadPhoto() {
+            try {
+                const url = await http.current.getPhoto(details.id);
+                blobUrl = url;
+                setPhotoUrl(url);
+            } catch (e: unknown) {
+                console.error('failed to load photo', e);
+                blobUrl = undefined;
+                setPhotoUrl(undefined);
+            }
+        }
+        loadPhoto();
         return () => {
-            ignore = true;
+            if (blobUrl) {
+                URL.revokeObjectURL(blobUrl);
+            }
         };
-    }, [loadPhoto]);
+    }, [http, details.id]);
 
     const timestampLegend = timestamp ?
         <PhotoTimestamp timestamp={timestamp} dateOnly={isMidnight(timestamp)} />
@@ -61,7 +55,7 @@ export default function PhotoTile({ details, resultIndex, onView }: PhotoTilePro
             <Stack direction='column' sx={{ justifyContent: 'center', }}>
                 <Box sx={{ position: 'relative', textAlign: 'center', }}>
                     <PhotoWithRetry details={details} photoUrl={photoUrl}
-                        preview onClick={onView} onRetry={loadPhoto} />
+                        preview onClick={onView} />
                     <PhotoIndex index={resultIndex} />
                     <PhotoActions photoId={details.id} timestamp={timestamp} />
                 </Box>

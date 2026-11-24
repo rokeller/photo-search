@@ -1,10 +1,13 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
+import React from 'react';
 import LoginButton from '../components/LoginButton';
 import PerfectCentered from '../components/PerfectCentered';
 
 export default function Login() {
+    const [date, _] = React.useState(() => new Date());
+
     return (
         <PerfectCentered>
             <Card variant='outlined'
@@ -19,7 +22,7 @@ export default function Login() {
                     <LoginButton />
 
                     <Typography sx={{ textAlign: 'center', mt: 2, }} variant='body2'>
-                        &copy; 2023 - {new Date().getFullYear()} by flrx39.net
+                        &copy; 2023 - {date.getFullYear()} by flrx39.net
                     </Typography>
                 </Box>
             </Card>

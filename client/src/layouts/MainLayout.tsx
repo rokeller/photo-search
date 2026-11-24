@@ -46,6 +46,7 @@ export default function MainLayout({ children }: React.PropsWithChildren) {
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState<null | HTMLElement>(null);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
     const [filtersShown, setFiltersShown] = React.useState<boolean>(false);
+    const [date, _] = React.useState(() => new Date());
 
     function handleMobileMenuClose() {
         setMobileMoreAnchorEl(null);
@@ -121,7 +122,7 @@ export default function MainLayout({ children }: React.PropsWithChildren) {
         <AppBar position='fixed' sx={{ top: 'auto', bottom: 0, }}>
             <Toolbar variant='dense'>
                 <Typography variant='body2'>
-                    &copy; 2023 - {new Date().getFullYear()}{' '}
+                    &copy; 2023 - {date.getFullYear()}{' '}
                     <Link href='https://flrx39.net' target='_blank' rel='noopener'>
                         flrx39.net
                     </Link>
