@@ -1,7 +1,7 @@
-import React from 'react';
-import { useAccessToken } from './AuthConfig';
+import { InteractionRequiredAuthError, IPublicClientApplication } from '@azure/msal-browser';
 import { isErrorResponse, PhotoSearchError } from './Errors';
 import { PhotoService } from './PhotoService';
+import React from 'react';
 
 interface QueryPhotosRequest {
     query: string;
@@ -34,11 +34,11 @@ export interface Http {
 }
 
 class HttpImpl implements Http {
-    private readonly accessToken: string;
+    private readonly msalInstance: IPublicClientApplication;
     private readonly photoService = PhotoService;
 
-    constructor(accessToken: string) {
-        this.accessToken = accessToken;
+    constructor(msalInstance: IPublicClientApplication) {
+        this.msalInstance = msalInstance;
     }
 
     public async search({ query, limit, offset }: QueryPhotosRequest) {
@@ -123,13 +123,13 @@ class HttpImpl implements Http {
 
     private async authenticateRequest() {
         const headers: Record<string, string> = {};
+        const accessToken = await this.getAccessToken();
 
-        if (this.accessToken) {
-            headers['authorization'] = 'Bearer ' + this.accessToken;
-        } else {
-            console.error('failed to find an access token.');
+        if (!accessToken) {
+            throw new Error('failed to acquire access token');
         }
 
+        headers['authorization'] = 'Bearer ' + accessToken;
         return headers;
     }
 
@@ -162,46 +162,31 @@ class HttpImpl implements Http {
                 throw new Error('unknown error: ' + resp.status);
         }
     }
-}
 
-function factory(accessToken: string): Http {
-    return new HttpImpl(accessToken);
-}
+    private async getAccessToken(): Promise<string | null> {
+        const accts = this.msalInstance.getAllAccounts();
+        const accessTokenRequest = {
+            scopes: globalThis.photoSearch.auth.scopes,
+            account: accts.length > 0 && accts[0] || undefined,
+        };
 
-type ResolveFn = (value: Http | PromiseLike<Http>) => void;
-type RejectFn = (reason?: unknown) => void;
-
-export function useHttpService(): Promise<Http> {
-    const accessTokenPromise = useAccessToken();
-    const promiseRef = React.useRef<null | Promise<Http>>(null);
-    const resolveRef = React.useRef<null | ResolveFn>(null);
-    const rejectRef = React.useRef<null | RejectFn>(null);
-
-    if (promiseRef.current === null) {
-        promiseRef.current = new Promise<Http>((resolve, reject) => {
-            if (resolveRef.current === null) {
-                resolveRef.current = resolve;
+        try {
+            const tokenResponse = await this.msalInstance.acquireTokenSilent(accessTokenRequest);
+            return tokenResponse.accessToken;
+        } catch (error: unknown) {
+            // Fallback to interactive method if silent acquisition fails
+            if (error instanceof InteractionRequiredAuthError) {
+                console.debug('try acquiring token with redirect');
+                await this.msalInstance.acquireTokenRedirect(accessTokenRequest);
+                console.debug('finished acquiring token with redirect');
             }
-            if (rejectRef.current === null) {
-                rejectRef.current = reject;
-            }
-        });
-    }
-
-    React.useEffect(() => {
-        if (resolveRef.current === null || rejectRef.current === null) {
-            console.warn('resolve and/or reject are not set yet', resolveRef.current, rejectRef.current);
-            return;
+            console.warn('silent token acquisition failed:', error);
+            return null;
         }
+    }
+}
 
-        accessTokenPromise
-            .then((accessToken) => resolveRef.current!(factory(accessToken)))
-            .catch((error) => {
-                console.error('failed to get access token for HTTP service', error);
-                rejectRef.current!(new Error('failed to get access token for HTTP service'));
-            });
-    }, [accessTokenPromise]);
-
-    // eslint-disable-next-line react-hooks/refs
-    return promiseRef.current;
+export function useHttp(msalInstance: IPublicClientApplication): React.RefObject<Http> {
+    const httpRef = React.useRef<Http>(new HttpImpl(msalInstance));
+    return httpRef;
 }

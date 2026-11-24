@@ -10,7 +10,7 @@ interface PhotoWithRetryProps {
     details?: PhotoResultItem;
     photoUrl: string | undefined;
     onClick?: () => void;
-    onRetry: () => void;
+    onRetry?: () => void;
 }
 
 const PhotoPreview = styled('img')({
@@ -32,9 +32,11 @@ export default function PhotoWithRetry({ preview, details, photoUrl, onClick, on
         return (
             <Stack direction='column' sx={{ height: 360, justifyContent: 'center', }}>
                 <Typography variant='body2'>Failed to load preview.</Typography>
-                <Box>
-                    <Button variant='outlined' size='small' onClick={onRetry}>Retry</Button>
-                </Box>
+                {onRetry ?
+                    <Box>
+                        <Button variant='outlined' size='small' onClick={onRetry}>Retry</Button>
+                    </Box>
+                    : null}
             </Stack>
         );
     } else if (preview) {

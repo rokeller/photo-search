@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "VITE_APP_VERSION=$(git describe --tags --dirty) vite",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "oxlint .",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -30,12 +30,9 @@
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.73.0",
-    "@typescript-eslint/parser": "^8.73.0",
     "@vitejs/plugin-react": "^6.3.0",
-    "eslint": "^10.15.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
+    "oxlint": "^1.94.0",
     "svgo": "^4.1.0",
     "typescript": "^6.0.3",
     "vite": "^8.3.8",

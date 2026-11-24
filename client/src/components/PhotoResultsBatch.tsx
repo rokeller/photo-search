@@ -1,10 +1,11 @@
+import { useMsal } from '@azure/msal-react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 import { toast } from 'react-toastify';
-import { Http, PhotoResultItem, PhotoResultsResponse, useHttpService } from '../services/Http';
+import { Http, PhotoResultItem, PhotoResultsResponse, useHttp, } from '../services/Http';
 import { NoPhotosFound } from './NoPhotosFound';
 import { LIMIT, RetrieveFn } from './PhotoCommon';
 import PhotoTile from './PhotoTile';
@@ -27,12 +28,11 @@ export interface PhotoResultsBatchProps<TProps> {
 }
 
 async function fetchPhotos<TProps>(
-    httpPromise: Promise<Http>,
+    http: Http,
     offset: number,
     props: TProps,
     retrieveFn: RetrieveFn<TProps>,
 ) {
-    const http = await httpPromise;
     const response = await retrieveFn(http, props, offset);
     if (response) {
         return response.items;
@@ -41,12 +41,13 @@ async function fetchPhotos<TProps>(
 
 function PhotoResultsBatchFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
     const Component = ({ offset, onNoMore, showPhoto, input: props }: PhotoResultsBatchProps<TProps>) => {
-        const httpPromise = useHttpService();
+        const { instance } = useMsal();
+        const http = useHttp(instance);
         const [photos, setPhotos] = React.useState<Array<PhotoResultItem>>();
 
         React.useEffect(() => {
             let ignore = false;
-            fetchPhotos(httpPromise, offset, props, retrieveFn)
+            fetchPhotos(http.current, offset, props, retrieveFn)
                 .then((items) => {
                     if (!ignore) {
                         if (items && items.length < LIMIT) {
@@ -65,7 +66,7 @@ function PhotoResultsBatchFactory<TProps>(retrieveFn: RetrieveFn<TProps>) {
             return () => {
                 ignore = true;
             };
-        }, [offset, onNoMore, props, httpPromise]);
+        }, [http, offset, onNoMore, props]);
 
         const items = (photos === undefined) ?
             new Array(LIMIT).fill(0).map((_, index) => (

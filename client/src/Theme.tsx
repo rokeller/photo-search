@@ -1,4 +1,4 @@
-import { PublicClientApplication } from '@azure/msal-browser';
+import { createStandardPublicClientApplication } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -11,8 +11,9 @@ const theme = createTheme({
     },
 });
 
+const msalInstance = await createStandardPublicClientApplication(msalConfig)
+
 export function Theme({ children }: React.PropsWithChildren) {
-    const msalInstance = new PublicClientApplication(msalConfig)
     return (
         <ThemeProvider theme={theme} disableTransitionOnChange>
             <CssBaseline enableColorScheme />
