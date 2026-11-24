@@ -42,5 +42,5 @@ ENTRYPOINT [ "./web" ]
 EXPOSE 8080/tcp
 
 COPY --link --from=alpine /etc/ssl/certs /etc/ssl/certs
-COPY --link --from=server /src/web /app
+COPY --link --from=server /src/web /app/
 COPY --link --from=client /src/dist /app/dist
